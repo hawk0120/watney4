@@ -6,8 +6,10 @@ import kotlinx.coroutines.withContext
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.entities.channel.ChannelType
 import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.EventListener
+import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.requests.GatewayIntent
 import utils.ChatInterface
 import utils.IncomingMessage
@@ -42,10 +44,24 @@ class DiscordBot(
                         log.info("Message from $author: ${text.take(80)}...")
                         sink.trySend(IncomingMessage(text, this@DiscordBot))
                     }
+                    is SlashCommandInteractionEvent -> {
+                        if (event.channelType != ChannelType.PRIVATE) return@EventListener
+                        val channel = event.getChannel() as PrivateChannel
+                        lastChannel = channel
+                        if (event.name == "clear") {
+                            log.info("Slash command /clear from ${event.user.name}")
+                            event.reply("Context cleared. Starting fresh.").setEphemeral(false).queue()
+                            sink.trySend(IncomingMessage("/clear", this@DiscordBot))
+                        }
+                    }
                 }
             })
             .build()
             .awaitReady()
+
+        jda!!.updateCommands().addCommands(
+            Commands.slash("clear", "Clear conversation history")
+        ).queue()
 
         log.info("Discord bot connected as ${jda!!.selfUser.name}")
     }
@@ -56,8 +72,12 @@ class DiscordBot(
             log.warn("No DM channel to reply to")
             return
         }
-        channel.sendMessage(text).queue()
-        log.debug("Sent ${text.length} chars to DM")
+        val truncated = if (text.length > 1990) {
+            log.warn("Truncating message from ${text.length} to 1990 chars")
+            text.take(1990) + "\n\n*(truncated — ${text.length} chars total)*"
+        } else text
+        channel.sendMessage(truncated).queue()
+        log.debug("Sent ${truncated.length} chars to DM")
     }
 
     override suspend fun stop() {

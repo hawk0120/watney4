@@ -23,12 +23,12 @@ class LlamaCppProvider(
     private val log = Logger.getLogger("LlamaCppProvider", logLevel)
     private val gson = Gson()
 
-    override suspend fun query(messages: List<ChatMessage>): LLMResult = withContext(Dispatchers.IO) {
+    override suspend fun query(messages: List<ChatMessage>, tools: List<Map<String, Any>>?): LLMResult = withContext(Dispatchers.IO) {
         val start = Instant.now()
         log.debug("Querying model=$model, messages=${messages.size}")
 
         try {
-            val prompt = messages.joinToString("\n") { "${it.role}: ${it.content}" }
+            val prompt = messages.joinToString("\n") { "${it.role}: ${it.content ?: ""}" }
 
             val connection = URI(baseUrl).toURL().openConnection() as HttpURLConnection
             connection.requestMethod = "POST"

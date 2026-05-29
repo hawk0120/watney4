@@ -1,29 +1,66 @@
 package utils
 
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URI
 import java.time.Instant
 
+data class MistralFunctionCall(
+    val name: String,
+    val arguments: String
+)
+
+data class MistralToolCall(
+    val id: String,
+    val type: String = "function",
+    val function: MistralFunctionCall
+)
+
 data class MistralMessage(
     val role: String,
-    val content: String
+    val content: String?,
+    val tool_calls: List<MistralToolCall>? = null,
+    val tool_call_id: String? = null,
+    val name: String? = null
 )
 
 data class MistralRequest(
     val model: String,
     val messages: List<MistralMessage>,
+    val tools: List<Map<String, Any>>? = null,
     val stream: Boolean = false
 )
 
 data class MistralChoice(
+    val index: Int = 0,
+    val finish_reason: String? = null,
     val message: MistralMessage
 )
 
+data class MistralUsage(
+    val prompt_tokens: Int = 0,
+    val completion_tokens: Int = 0,
+    val total_tokens: Int = 0
+)
+
 data class MistralResponse(
-    val choices: List<MistralChoice>
+    val id: String? = null,
+    val choices: List<MistralChoice>,
+    val usage: MistralUsage? = null,
+    val `object`: String? = null,
+    val created: Long? = null
+)
+
+data class MistralError(
+    val message: String? = null,
+    val type: String? = null
+)
+
+data class MistralErrorResponse(
+    val error: MistralError? = null
 )
 
 class MistralProvider(
@@ -35,13 +72,37 @@ class MistralProvider(
     private val log = Logger.getLogger("MistralProvider", logLevel)
     private val gson = Gson()
 
-    override suspend fun query(messages: List<ChatMessage>): LLMResult = withContext(Dispatchers.IO) {
+    override suspend fun query(
+        messages: List<ChatMessage>,
+        tools: List<Map<String, Any>>?
+    ): LLMResult = withContext(Dispatchers.IO) {
         val start = Instant.now()
-        log.debug("Querying model=$model, messages=${messages.size}")
+        log.debug("Querying model=$model, messages=${messages.size}, tools=${tools?.size ?: 0}")
 
         try {
-            val mistralMessages = messages.map { MistralMessage(it.role, it.content) }
-            val request = MistralRequest(model, mistralMessages)
+            val mistralMessages = messages.map { msg ->
+                MistralMessage(
+                    role = msg.role,
+                    content = msg.content,
+                    tool_calls = msg.toolCalls?.map { tc ->
+                        MistralToolCall(
+                            id = tc.id,
+                            function = MistralFunctionCall(tc.name, gson.toJson(tc.arguments))
+                        )
+                    },
+                    tool_call_id = msg.toolCallId,
+                    name = msg.name
+                )
+            }
+
+            val request = MistralRequest(
+                model = model,
+                messages = mistralMessages,
+                tools = tools?.ifEmpty { null }
+            )
+
+            val body = gson.toJson(request)
+            log.trace("Request body: ${body.take(500)}...")
 
             val connection = URI(baseUrl).toURL().openConnection() as HttpURLConnection
             connection.requestMethod = "POST"
@@ -50,17 +111,47 @@ class MistralProvider(
             connection.doOutput = true
 
             connection.outputStream.bufferedWriter().use { writer ->
-                writer.write(gson.toJson(request))
+                writer.write(body)
             }
 
             val rawJson = connection.inputStream.bufferedReader().use { it.readText() }
+            val elapsed = java.time.Duration.between(start, Instant.now()).toMillis()
+
+            if (connection.responseCode != 200) {
+                val errorResponse = try {
+                    gson.fromJson(rawJson, MistralErrorResponse::class.java)
+                } catch (_: Exception) {
+                    null
+                }
+                val errorMsg = errorResponse?.error?.message ?: rawJson.take(200)
+                log.error("API error (${connection.responseCode}): $errorMsg")
+                return@withContext LLMResult.Error("Mistral API error ${connection.responseCode}: $errorMsg")
+            }
+
             val parsed = gson.fromJson(rawJson, MistralResponse::class.java)
-            val content = parsed.choices.firstOrNull()?.message?.content
+            val choice = parsed.choices.firstOrNull()
                 ?: return@withContext LLMResult.Error("No choices in response")
 
-            val elapsed = java.time.Duration.between(start, Instant.now()).toMillis()
-            log.info("Query OK — ${elapsed}ms, response=${content.length} chars, prompt=${messages.last().content.take(60)}...")
-            LLMResult.Success(content)
+            val finishReason = choice.finish_reason
+            val message = choice.message
+
+            if (finishReason == "tool_calls" && message.tool_calls != null) {
+                val calls = message.tool_calls.map { tc ->
+                    val argsType = object : TypeToken<Map<String, Any?>>() {}.type
+                    val parsedArgs: Map<String, Any?> = try {
+                        gson.fromJson(tc.function.arguments, argsType)
+                    } catch (_: Exception) {
+                        mapOf("raw" to tc.function.arguments)
+                    }
+                    ToolCall(id = tc.id, name = tc.function.name, arguments = parsedArgs)
+                }
+                log.info("Query OK — ${elapsed}ms, ${calls.size} tool call(s)")
+                LLMResult.ToolCalls(calls)
+            } else {
+                val content = message.content ?: ""
+                log.info("Query OK — ${elapsed}ms, response=${content.length} chars")
+                LLMResult.Success(content)
+            }
         } catch (e: Exception) {
             val elapsed = java.time.Duration.between(start, Instant.now()).toMillis()
             log.error("Query failed after ${elapsed}ms: ${e.message}")

@@ -6,8 +6,15 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import utils.AppConfig
+import utils.BashTool
+import utils.GlobTool
+import utils.GrepTool
 import utils.Logger
 import utils.MemoryStore
+import utils.OpencodeTool
+import utils.ReadTool
+import utils.ToolRegistry
+import utils.WriteTool
 
 fun main() = runBlocking {
     val config = AppConfig.load()
@@ -24,9 +31,19 @@ fun main() = runBlocking {
 
     val memory = MemoryStore(config.memoryDbPath)
 
+    val tools = ToolRegistry(listOf(
+        ReadTool(),
+        WriteTool(),
+        BashTool(),
+        GlobTool(),
+        GrepTool(),
+        OpencodeTool()
+    ))
+
     val agent = Agent(
         inbox = inbox,
         llm = AppConfig.createProvider(config),
+        tools = tools,
         logLevel = config.logLevel,
         memory = memory
     )
