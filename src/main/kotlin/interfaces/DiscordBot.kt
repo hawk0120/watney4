@@ -11,10 +11,12 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.EventListener
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.requests.GatewayIntent
+import net.dv8tion.jda.api.utils.FileUpload
 import utils.ChatInterface
 import utils.IncomingMessage
 import utils.LogLevel
 import utils.Logger
+import utils.TtsGenerator
 
 class DiscordBot(
     private val token: String,
@@ -24,6 +26,8 @@ class DiscordBot(
     private val log = Logger.getLogger(label, logLevel)
     private var jda: net.dv8tion.jda.api.JDA? = null
     private var lastChannel: PrivateChannel? = null
+    private var voiceMode = false
+    private val tts = TtsGenerator()
 
     override suspend fun start(sink: SendChannel<IncomingMessage>) = withContext(Dispatchers.IO) {
         log.info("Starting Discord bot...")
@@ -48,10 +52,18 @@ class DiscordBot(
                         if (event.channelType != ChannelType.PRIVATE) return@EventListener
                         val channel = event.getChannel() as PrivateChannel
                         lastChannel = channel
-                        if (event.name == "clear") {
-                            log.info("Slash command /clear from ${event.user.name}")
-                            event.reply("Context cleared. Starting fresh.").setEphemeral(false).queue()
-                            sink.trySend(IncomingMessage("/clear", this@DiscordBot))
+                        when (event.name) {
+                            "clear" -> {
+                                log.info("Slash command /clear from ${event.user.name}")
+                                event.reply("Context cleared. Starting fresh.").setEphemeral(false).queue()
+                                sink.trySend(IncomingMessage("/clear", this@DiscordBot))
+                            }
+                            "voice" -> {
+                                voiceMode = !voiceMode
+                                val status = if (voiceMode) "on" else "off"
+                                log.info("Voice mode toggled $status by ${event.user.name}")
+                                event.reply("Voice mode **$status**. I'll ${if (voiceMode) "read my responses aloud" else "respond with text only"}.").setEphemeral(false).queue()
+                            }
                         }
                     }
                 }
@@ -60,7 +72,8 @@ class DiscordBot(
             .awaitReady()
 
         jda!!.updateCommands().addCommands(
-            Commands.slash("clear", "Clear conversation history")
+            Commands.slash("clear", "Clear conversation history"),
+            Commands.slash("voice", "Toggle voice mode (TTS responses)")
         ).queue()
 
         log.info("Discord bot connected as ${jda!!.selfUser.name}")
@@ -78,6 +91,16 @@ class DiscordBot(
         } else text
         channel.sendMessage(truncated).queue()
         log.debug("Sent ${truncated.length} chars to DM")
+
+        if (voiceMode) {
+            val audio = tts.generate(truncated)
+            if (audio != null) {
+                channel.sendFiles(FileUpload.fromData(audio, "response.ogg")).queue()
+                log.debug("Sent voice response (${audio.size} bytes)")
+            } else {
+                log.warn("TTS generation failed")
+            }
+        }
     }
 
     override suspend fun stop() {

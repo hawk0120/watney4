@@ -11,6 +11,7 @@ import utils.LLMResult
 import utils.LogLevel
 import utils.Logger
 import utils.MemoryStore
+import utils.ToolCall
 import utils.ToolRegistry
 
 class Agent(
@@ -77,49 +78,63 @@ class Agent(
             memory?.saveMessage("user", trimmed)
             log.debug("Input from ${msg.replyTo.label} (${trimmed.length} chars): ${trimmed.take(80)}...")
 
-            val finalResponse = runToolLoop(throttledProgress { text ->
-                msg.replyTo.sendMessage(text)
-            })
+            val progress = throttledProgress { text -> msg.replyTo.sendMessage(text) }
+            var done = false
 
-            messages.add(ChatMessage("assistant", finalResponse))
-            memory?.saveMessage("assistant", finalResponse)
-            turnCount++
-            log.info("Turn $turnCount complete — ${messages.size} messages in context")
-            msg.replyTo.sendMessage(finalResponse)
+            for (iter in 1..maxToolIterations) {
+                log.trace("Tool loop iteration $iter")
+
+                when (val result = llm.query(messages.toList(), tools?.definitions())) {
+                    is LLMResult.Success -> {
+                        if (result.calls.isNullOrEmpty()) {
+                            val response = result.response
+                            messages.add(ChatMessage("assistant", response))
+                            memory?.saveMessage("assistant", response)
+                            turnCount++
+                            log.info("Turn $turnCount complete — ${messages.size} messages in context")
+                            msg.replyTo.sendMessage(response)
+                            done = true
+                            break
+                        }
+
+                        if (result.response.isNotBlank()) {
+                            msg.replyTo.sendMessage(result.response)
+                        }
+                        messages.add(ChatMessage("assistant", result.response, toolCalls = result.calls))
+                        executeToolCalls(result.calls, progress)
+                    }
+                    is LLMResult.Error -> {
+                        msg.replyTo.sendMessage("Sorry, I encountered an error: ${result.message}")
+                        done = true
+                        break
+                    }
+                }
+            }
+
+            if (!done) {
+                msg.replyTo.sendMessage("I've reached the maximum number of tool calls and couldn't complete my response.")
+            }
         }
 
         memory?.close()
     }
 
-    private suspend fun runToolLoop(progress: (String) -> Unit): String {
-        var iterations = 0
-        while (iterations < maxToolIterations) {
-            iterations++
-            log.trace("Tool loop iteration $iterations")
-
-            when (val result = llm.query(messages.toList(), tools?.definitions())) {
-                is LLMResult.Success -> return result.response
-                is LLMResult.ToolCalls -> {
-                    for (call in result.calls) {
-                        log.debug("Executing tool: ${call.name}(${call.arguments})")
-                        progress("**${call.name}** — running...")
-                        val toolResult = tools?.execute(call.name, call.arguments, progress)
-                            ?: "Error: no tools registered"
-                        log.debug("Tool result: ${toolResult.take(200)}...")
-                        messages.add(
-                            ChatMessage(
-                                role = "tool",
-                                content = toolResult,
-                                toolCallId = call.id,
-                                name = call.name
-                            )
-                        )
-                    }
-                }
-                is LLMResult.Error -> return "Sorry, I encountered an error: ${result.message}"
-            }
+    private suspend fun executeToolCalls(calls: List<ToolCall>, progress: (String) -> Unit) {
+        for (call in calls) {
+            log.debug("Executing tool: ${call.name}(${call.arguments})")
+            progress("**${call.name}** — running...")
+            val toolResult = tools?.execute(call.name, call.arguments, progress)
+                ?: "Error: no tools registered"
+            log.debug("Tool result: ${toolResult.take(200)}...")
+            messages.add(
+                ChatMessage(
+                    role = "tool",
+                    content = toolResult,
+                    toolCallId = call.id,
+                    name = call.name
+                )
+            )
         }
-        return "I've reached the maximum number of tool calls and couldn't complete my response."
     }
 
     private fun throttledProgress(send: suspend (String) -> Unit): (String) -> Unit {

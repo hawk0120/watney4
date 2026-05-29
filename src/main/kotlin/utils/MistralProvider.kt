@@ -135,8 +135,9 @@ class MistralProvider(
             val finishReason = choice.finish_reason
             val message = choice.message
 
-            if (finishReason == "tool_calls" && message.tool_calls != null) {
-                val calls = message.tool_calls.map { tc ->
+            val content = message.content ?: ""
+            val calls = if (message.tool_calls != null && message.tool_calls.isNotEmpty()) {
+                message.tool_calls.map { tc ->
                     val argsType = object : TypeToken<Map<String, Any?>>() {}.type
                     val parsedArgs: Map<String, Any?> = try {
                         gson.fromJson(tc.function.arguments, argsType)
@@ -145,13 +146,14 @@ class MistralProvider(
                     }
                     ToolCall(id = tc.id, name = tc.function.name, arguments = parsedArgs)
                 }
-                log.info("Query OK — ${elapsed}ms, ${calls.size} tool call(s)")
-                LLMResult.ToolCalls(calls)
+            } else null
+
+            if (calls != null) {
+                log.info("Query OK — ${elapsed}ms, response=${content.length} chars, ${calls.size} tool call(s)")
             } else {
-                val content = message.content ?: ""
                 log.info("Query OK — ${elapsed}ms, response=${content.length} chars")
-                LLMResult.Success(content)
             }
+            LLMResult.Success(content, calls?.ifEmpty { null })
         } catch (e: Exception) {
             val elapsed = java.time.Duration.between(start, Instant.now()).toMillis()
             log.error("Query failed after ${elapsed}ms: ${e.message}")

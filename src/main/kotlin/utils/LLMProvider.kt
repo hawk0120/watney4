@@ -9,8 +9,7 @@ data class ChatMessage(
 )
 
 sealed class LLMResult {
-    data class Success(val response: String) : LLMResult()
-    data class ToolCalls(val calls: List<ToolCall>) : LLMResult()
+    data class Success(val response: String, val calls: List<ToolCall>? = null) : LLMResult()
     data class Error(val message: String) : LLMResult()
 }
 
