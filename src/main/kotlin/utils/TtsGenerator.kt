@@ -5,8 +5,8 @@ import java.nio.file.Path
 import java.util.UUID
 
 class TtsGenerator(
-    private val maxChars: Int = 1000,
-    private val voice: String = "en"
+    val maxChars: Int = 1000,
+    private val voice: String = "mb-us1"
 ) {
     private val tmpDir = Path.of(System.getProperty("java.io.tmpdir"))
 

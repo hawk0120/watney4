@@ -1,5 +1,7 @@
 package utils
 
+import tools.ToolCall
+
 data class ChatMessage(
     val role: String,
     val content: String?,

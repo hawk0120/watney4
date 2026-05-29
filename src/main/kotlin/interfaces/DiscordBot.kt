@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.entities.channel.ChannelType
 import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.hooks.EventListener
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.requests.GatewayIntent
@@ -36,6 +37,15 @@ class DiscordBot(
             .enableIntents(GatewayIntent.DIRECT_MESSAGES, GatewayIntent.GUILD_MESSAGES)
             .addEventListeners(EventListener { event ->
                 when (event) {
+                    is ReadyEvent -> {
+                        event.jda.updateCommands().addCommands(
+                            Commands.slash("clear", "Clear conversation history"),
+                            Commands.slash("voice", "Toggle voice mode (TTS responses)")
+                        ).queue(
+                            { log.info("Slash commands registered (${it.size} commands)") },
+                            { log.error("Failed to register slash commands: ${it.message}") }
+                        )
+                    }
                     is MessageReceivedEvent -> {
                         if (event.author.isBot) return@EventListener
                         if (!event.isFromType(ChannelType.PRIVATE)) return@EventListener
@@ -71,11 +81,6 @@ class DiscordBot(
             .build()
             .awaitReady()
 
-        jda!!.updateCommands().addCommands(
-            Commands.slash("clear", "Clear conversation history"),
-            Commands.slash("voice", "Toggle voice mode (TTS responses)")
-        ).queue()
-
         log.info("Discord bot connected as ${jda!!.selfUser.name}")
     }
 
@@ -86,14 +91,21 @@ class DiscordBot(
             return
         }
         val truncated = if (text.length > 1990) {
-            log.warn("Truncating message from ${text.length} to 1990 chars")
-            text.take(1990) + "\n\n*(truncated — ${text.length} chars total)*"
+            val suffix = "\n\n*(truncated — ${text.length} chars total)*"
+            val maxBody = 2000 - suffix.length
+            log.warn("Truncating message from ${text.length} to $maxBody chars")
+            text.take(maxBody) + suffix
         } else text
         channel.sendMessage(truncated).queue()
         log.debug("Sent ${truncated.length} chars to DM")
 
         if (voiceMode) {
-            val audio = tts.generate(truncated)
+            val ttsText = text.take(tts.maxChars)
+            val audio = if (ttsText.length < text.length) {
+                tts.generate("$ttsText... (response truncated for speech)")
+            } else {
+                tts.generate(ttsText)
+            }
             if (audio != null) {
                 channel.sendFiles(FileUpload.fromData(audio, "response.ogg")).queue()
                 log.debug("Sent voice response (${audio.size} bytes)")

@@ -11,8 +11,8 @@ import utils.LLMResult
 import utils.LogLevel
 import utils.Logger
 import utils.MemoryStore
-import utils.ToolCall
-import utils.ToolRegistry
+import tools.ToolCall
+import tools.ToolRegistry
 
 class Agent(
     private val inbox: ReceiveChannel<IncomingMessage>,

@@ -1,4 +1,4 @@
-package utils
+package tools
 
 interface Tool {
     val name: String

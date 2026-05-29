@@ -6,15 +6,16 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import utils.AppConfig
-import utils.BashTool
-import utils.GlobTool
-import utils.GrepTool
+import tools.BashTool
+import tools.GlobTool
+import tools.GrepTool
+import tools.OpencodeTool
+import tools.ReadTool
+import tools.ToolRegistry
+import tools.WebFetchTool
+import tools.WriteTool
 import utils.Logger
 import utils.MemoryStore
-import utils.OpencodeTool
-import utils.ReadTool
-import utils.ToolRegistry
-import utils.WriteTool
 
 fun main() = runBlocking {
     val config = AppConfig.load()
@@ -37,7 +38,8 @@ fun main() = runBlocking {
         BashTool(),
         GlobTool(),
         GrepTool(),
-        OpencodeTool()
+        OpencodeTool(),
+        WebFetchTool()
     ))
 
     val agent = Agent(

@@ -3,6 +3,7 @@ package utils
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
+import tools.ToolCall
 import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URI
