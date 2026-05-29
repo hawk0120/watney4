@@ -41,5 +41,11 @@ bin/
 ### VS Code ###
 .vscode/
 
+### Config ###
+src/main/resources/application.properties
+
+# SQLite db
+watney4.db
+
 ### Mac OS ###
 .DS_Store

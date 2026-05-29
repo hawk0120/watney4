@@ -1,43 +1,38 @@
 package core
 
-import androidx.compose.runtime.*
-import javax.script.ScriptEngineManager
-import com.jakewharton.mosaic.runMosaic
+import interfaces.Cli
+import interfaces.DiscordBot
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import utils.AppConfig
+import utils.Logger
+import utils.MemoryStore
 
-fun main(): kotlin.Unit = runBlocking {
-    runMosaic {
-        val engine = remember {
-            ScriptEngineManager().getEngineByExtension("kts")
-        }
+fun main() = runBlocking {
+    val config = AppConfig.load()
+    val log = Logger.getLogger("Main", config.logLevel)
 
-        var input by remember { mutableStateOf("") }
-        var output by remember { mutableStateOf(listOf<String>()) }
-        var error by remember { mutableStateOf<String?>(null) }
+    log.info("Starting Watney4 — provider: ${config.provider}, log.level: ${config.logLevel.name.lowercase()}")
 
-        fun evaluate(code: String) {
-            try {
-                val result = engine.eval(code)
-                output = output + "> $code" + (result?.toString() ?: "kotlin.Unit")
-                error = null
-            } catch (e: Exception) {
-                output = output + "> $code"
-                error = e.message
-            }
-        }
+    val cli = Cli(config.logLevel)
+    val discord = DiscordBot(config.discordToken, config.logLevel)
+    val inbox = Channel<utils.IncomingMessage>(Channel.UNLIMITED)
 
-        // TEMP: simulate input since Mosaic input handling isn't wired yet
-        LaunchedEffect(Unit) {
-            while (true) {
-                val line = readLine() ?: break
-                evaluate(line)
-            }
-        }
+    launch { cli.start(inbox) }
+    launch { discord.start(inbox) }
 
-        ReplScreen(
-            output = output,
-            input = input,
-            error = error
-        )
-    }
+    val memory = MemoryStore(config.memoryDbPath)
+
+    val agent = Agent(
+        inbox = inbox,
+        llm = AppConfig.createProvider(config),
+        logLevel = config.logLevel,
+        memory = memory
+    )
+    agent.run()
+
+    cli.stop()
+    discord.stop()
+    log.info("Watney4 stopped")
 }
