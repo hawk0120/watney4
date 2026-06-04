@@ -132,6 +132,7 @@ class Agent(
                 "bash" -> (call.arguments["command"] as? String)?.let { "`$it`" } ?: "running..."
                 "write" -> (call.arguments["filePath"] as? String)?.let { "`$it`" } ?: "running..."
                 "read" -> (call.arguments["filePath"] as? String)?.let { "`$it`" } ?: "running..."
+                "opencode" -> (call.arguments["task"] as? String)?.let { it.take(120) } ?: "running..."
                 else -> "running..."
             }
             progress("**${call.name}** — $detail")
