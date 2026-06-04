@@ -86,6 +86,13 @@ The LLM can call these to actually do things:
 - Python 3.11+
 - Linux (Ubuntu/Debian-based)
 
+### Quick start
+```bash
+./setup.sh
+```
+
+This installs system packages, Python deps, Piper TTS, creates a config template, and runs the build.
+
 ### Python packages
 ```bash
 pip3 install vosk ddgs --break-system-packages
