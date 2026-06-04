@@ -45,6 +45,12 @@ class Agent(
                 messages.addAll(history)
                 log.info("Loaded ${history.size} messages from history")
             }
+            val memories = it.loadMemories()
+            if (memories.isNotEmpty()) {
+                val memoryText = memories.joinToString("\n") { "- ${it.key}: ${it.content}" }
+                messages.add(ChatMessage("system", "Here's what I remember about you:\n$memoryText"))
+                log.info("Loaded ${memories.size} memories into context")
+            }
         }
 
         while (true) {
@@ -122,7 +128,13 @@ class Agent(
     private suspend fun executeToolCalls(calls: List<ToolCall>, progress: (String) -> Unit) {
         for (call in calls) {
             log.debug("Executing tool: ${call.name}(${call.arguments})")
-            progress("**${call.name}** — running...")
+            val detail = when (call.name) {
+                "bash" -> (call.arguments["command"] as? String)?.let { "`$it`" } ?: "running..."
+                "write" -> (call.arguments["filePath"] as? String)?.let { "`$it`" } ?: "running..."
+                "read" -> (call.arguments["filePath"] as? String)?.let { "`$it`" } ?: "running..."
+                else -> "running..."
+            }
+            progress("**${call.name}** — $detail")
             val toolResult = tools?.execute(call.name, call.arguments, progress)
                 ?: "Error: no tools registered"
             log.debug("Tool result: ${toolResult.take(200)}...")

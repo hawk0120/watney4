@@ -7,13 +7,20 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import utils.AppConfig
 import tools.BashTool
+import tools.CronTool
+import tools.ForgetMemoryTool
 import tools.GlobTool
 import tools.GrepTool
+import tools.MemorySearchTool
 import tools.OpencodeTool
 import tools.ReadTool
+import tools.SaveMemoryTool
 import tools.ToolRegistry
 import tools.WebFetchTool
+import tools.WebSearchTool
 import tools.WriteTool
+import utils.VoiceChatManager
+import utils.CronScheduler
 import utils.Logger
 import utils.MemoryStore
 
@@ -30,7 +37,19 @@ fun main() = runBlocking {
     launch { cli.start(inbox) }
     launch { discord.start(inbox) }
 
+    val voiceChat = VoiceChatManager(inbox, discord, config.logLevel)
+    discord.voiceChat = voiceChat
+
     val memory = MemoryStore(config.memoryDbPath)
+
+    val cronScheduler = CronScheduler(
+        dbPath = config.memoryDbPath,
+        inbox = inbox,
+        replyTo = discord,
+        logLevel = config.logLevel
+    )
+    cronScheduler.init()
+    launch { cronScheduler.start() }
 
     val tools = ToolRegistry(listOf(
         ReadTool(),
@@ -39,7 +58,12 @@ fun main() = runBlocking {
         GlobTool(),
         GrepTool(),
         OpencodeTool(),
-        WebFetchTool()
+        WebFetchTool(),
+        WebSearchTool(),
+        CronTool(cronScheduler),
+        MemorySearchTool(memory),
+        SaveMemoryTool(memory),
+        ForgetMemoryTool(memory)
     ))
 
     val agent = Agent(
@@ -50,6 +74,8 @@ fun main() = runBlocking {
         memory = memory
     )
     agent.run()
+    voiceChat.leave()
+    cronScheduler.close()
 
     cli.stop()
     discord.stop()

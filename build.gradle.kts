@@ -4,6 +4,7 @@ version = "1.0-SNAPSHOT"
 plugins {
     kotlin("jvm") version "2.1.0"
     application
+    id("org.graalvm.buildtools.native") version "0.10.5"
 }
 
 repositories {
@@ -27,6 +28,43 @@ application {
 tasks.test {
     useJUnitPlatform()
 }
+
+val fatJar = tasks.register<Jar>("fatJar") {
+    dependsOn(tasks.jar)
+    group = "distribution"
+    archiveClassifier = "fat"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        attributes["Main-Class"] = application.mainClass
+    }
+
+    from(
+        configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }
+    )
+    from(zipTree(tasks.jar.get().archiveFile))
+
+    exclude("META-INF/*.RSA", "META-INF/*.SF", "META-INF/*.DSA")
+}
+
 kotlin {
     jvmToolchain(21)
+}
+
+graalvmNative {
+    binaries {
+        named("main") {
+            imageName.set("watney4")
+            mainClass.set(application.mainClass)
+            buildArgs.add("-H:+ReportExceptionStackTraces")
+            buildArgs.add("--no-fallback")
+            buildArgs.add("-H:+AddAllCharsets")
+            buildArgs.add("-H:EnableURLProtocols=http,https,jar")
+            buildArgs.add("--enable-all-security-services")
+            buildArgs.add("--features=org.sqlite.nativeimage.SqliteJdbcFeature")
+        }
+    }
+    metadataRepository {
+        enabled.set(true)
+    }
 }

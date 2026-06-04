@@ -1,0 +1,356 @@
+[
+{
+  "name":"[B"
+},
+{
+  "name":"[Lcom.fasterxml.jackson.databind.AbstractTypeResolver;"
+},
+{
+  "name":"[Ljava.lang.String;"
+},
+{
+  "name":"[Lnet.dv8tion.jda.api.entities.Guild;"
+},
+{
+  "name":"[Lnet.dv8tion.jda.api.entities.Member;"
+},
+{
+  "name":"[Lnet.dv8tion.jda.api.entities.Role;"
+},
+{
+  "name":"[Lnet.dv8tion.jda.api.entities.ScheduledEvent;"
+},
+{
+  "name":"[Lnet.dv8tion.jda.api.entities.User;"
+},
+{
+  "name":"[Lnet.dv8tion.jda.api.entities.emoji.RichCustomEmoji;"
+},
+{
+  "name":"[Lnet.dv8tion.jda.api.entities.sticker.GuildSticker;"
+},
+{
+  "name":"[Lnet.dv8tion.jda.api.managers.AudioManager;"
+},
+{
+  "name":"[Lsun.security.pkcs.SignerInfo;"
+},
+{
+  "name":"android.os.Build$VERSION"
+},
+{
+  "name":"com.fasterxml.jackson.databind.ext.Java7SupportImpl",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.crypto.provider.AESCipher$General",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.crypto.provider.ARCFOURCipher",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.crypto.provider.ChaCha20Cipher$ChaCha20Poly1305",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.crypto.provider.DESCipher",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.crypto.provider.DESedeCipher",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.crypto.provider.DHParameters",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.crypto.provider.GaloisCounterMode$AESGCM",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.crypto.provider.HmacCore$HmacSHA384",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.crypto.provider.TlsMasterSecretGenerator",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"java.lang.String"
+},
+{
+  "name":"java.lang.Thread",
+  "fields":[{"name":"threadLocalRandomProbe"}]
+},
+{
+  "name":"java.security.AlgorithmParametersSpi"
+},
+{
+  "name":"java.security.KeyStoreSpi"
+},
+{
+  "name":"java.security.SecureRandomParameters"
+},
+{
+  "name":"java.security.interfaces.ECPrivateKey"
+},
+{
+  "name":"java.security.interfaces.ECPublicKey"
+},
+{
+  "name":"java.sql.Date"
+},
+{
+  "name":"java.util.Date"
+},
+{
+  "name":"java.util.concurrent.ForkJoinTask",
+  "fields":[{"name":"aux"}, {"name":"status"}]
+},
+{
+  "name":"java.util.concurrent.atomic.AtomicBoolean",
+  "fields":[{"name":"value"}]
+},
+{
+  "name":"java.util.concurrent.atomic.AtomicReference",
+  "fields":[{"name":"value"}]
+},
+{
+  "name":"java.util.concurrent.atomic.Striped64",
+  "fields":[{"name":"base"}, {"name":"cellsBusy"}]
+},
+{
+  "name":"javax.net.ssl.SNIHostName",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.String"] }]
+},
+{
+  "name":"javax.net.ssl.SSLParameters",
+  "methods":[{"name":"setServerNames","parameterTypes":["java.util.List"] }]
+},
+{
+  "name":"javax.security.auth.x500.X500Principal",
+  "fields":[{"name":"thisX500Name"}],
+  "methods":[{"name":"<init>","parameterTypes":["sun.security.x509.X500Name"] }]
+},
+{
+  "name":"jdk.internal.misc.Unsafe"
+},
+{
+  "name":"kotlinx.coroutines.CancellableContinuationImpl",
+  "fields":[{"name":"_decisionAndIndex$volatile"}, {"name":"_parentHandle$volatile"}, {"name":"_state$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.DispatchedCoroutine",
+  "fields":[{"name":"_decision$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.EventLoopImplBase",
+  "fields":[{"name":"_delayed$volatile"}, {"name":"_isCompleted$volatile"}, {"name":"_queue$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.JobSupport",
+  "fields":[{"name":"_parentHandle$volatile"}, {"name":"_state$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.JobSupport$Finishing",
+  "fields":[{"name":"_exceptionsHolder$volatile"}, {"name":"_isCompleting$volatile"}, {"name":"_rootCause$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.channels.BufferedChannel",
+  "fields":[{"name":"_closeCause$volatile"}, {"name":"bufferEnd$volatile"}, {"name":"bufferEndSegment$volatile"}, {"name":"closeHandler$volatile"}, {"name":"completedExpandBuffersAndPauseFlag$volatile"}, {"name":"receiveSegment$volatile"}, {"name":"receivers$volatile"}, {"name":"sendSegment$volatile"}, {"name":"sendersAndCloseStatus$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.internal.ConcurrentLinkedListNode",
+  "fields":[{"name":"_next$volatile"}, {"name":"_prev$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.internal.DispatchedContinuation",
+  "fields":[{"name":"_reusableCancellableContinuation$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.internal.LimitedDispatcher",
+  "fields":[{"name":"runningWorkers$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.internal.LockFreeLinkedListNode",
+  "fields":[{"name":"_next$volatile"}, {"name":"_prev$volatile"}, {"name":"_removedRef$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.internal.LockFreeTaskQueue",
+  "fields":[{"name":"_cur$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.internal.LockFreeTaskQueueCore",
+  "fields":[{"name":"_next$volatile"}, {"name":"_state$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.internal.Segment",
+  "fields":[{"name":"cleanedAndPointers$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.internal.ThreadSafeHeap",
+  "fields":[{"name":"_size$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.scheduling.CoroutineScheduler",
+  "fields":[{"name":"_isTerminated$volatile"}, {"name":"controlState$volatile"}, {"name":"parkedWorkersStack$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.scheduling.CoroutineScheduler$Worker",
+  "fields":[{"name":"workerCtl$volatile"}]
+},
+{
+  "name":"kotlinx.coroutines.scheduling.WorkQueue",
+  "fields":[{"name":"blockingTasksInBuffer$volatile"}, {"name":"consumerIndex$volatile"}, {"name":"lastScheduledTask$volatile"}, {"name":"producerIndex$volatile"}]
+},
+{
+  "name":"net.dv8tion.jda.internal.utils.FallbackLogger",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.String"] }]
+},
+{
+  "name":"org.slf4j.Logger"
+},
+{
+  "name":"org.slf4j.spi.SLF4JServiceProvider"
+},
+{
+  "name":"org.sqlite.JDBC"
+},
+{
+  "name":"sun.security.pkcs12.PKCS12KeyStore",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.pkcs12.PKCS12KeyStore$DualFormatPKCS12",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.DSA$SHA224withDSA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.DSA$SHA256withDSA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.NativePRNG",
+  "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"<init>","parameterTypes":["java.security.SecureRandomParameters"] }]
+},
+{
+  "name":"sun.security.provider.SHA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.SHA2$SHA224",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.SHA2$SHA256",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.SHA5$SHA384",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.SHA5$SHA512",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.X509Factory",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.certpath.PKIXCertPathValidator",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.rsa.PSSParameters",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.rsa.RSAKeyFactory$Legacy",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.rsa.RSAPSSSignature",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.rsa.RSASignature$SHA224withRSA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.ssl.KeyManagerFactoryImpl$SunX509",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.ssl.SSLContextImpl$DefaultSSLContext",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.ssl.SSLContextImpl$TLSContext",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.ssl.TrustManagerFactoryImpl$PKIXFactory",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.util.ObjectIdentifier"
+},
+{
+  "name":"sun.security.x509.AuthorityInfoAccessExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.AuthorityKeyIdentifierExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.BasicConstraintsExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.CRLDistributionPointsExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.CertificateExtensions"
+},
+{
+  "name":"sun.security.x509.CertificatePoliciesExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.ExtendedKeyUsageExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.IssuerAlternativeNameExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.KeyUsageExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.NetscapeCertTypeExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.PrivateKeyUsageExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.SubjectAlternativeNameExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.SubjectKeyIdentifierExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+}
+]

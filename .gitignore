@@ -47,5 +47,8 @@ src/main/resources/application.properties
 # SQLite db
 watney4.db
 
+# Piper TTS binaries and voice models
+piper/
+
 ### Mac OS ###
 .DS_Store
