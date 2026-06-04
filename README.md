@@ -72,10 +72,10 @@ The LLM can call these to actually do things:
 
 ### Voice
 - **Speech-to-text** — Vosk (offline, ~40MB model, downloads automatically on first use)
-- **Text-to-speech** — espeak-ng + mbrola-us1, played directly into Discord voice channel
+- **Text-to-speech** — Piper, played directly into Discord voice channel
 
 ### TTS (File-based)
-- espeak-ng → WAV → ffmpeg → .ogg, sent as a Discord attachment
+- Piper → WAV → ffmpeg → .ogg, sent as a Discord attachment
 - Toggle with `/voice`
 - Max ~30 seconds of speech
 
@@ -93,7 +93,7 @@ pip3 install vosk ddgs --break-system-packages
 
 ### System packages
 ```bash
-sudo apt install espeak-ng mbrola-us1 ffmpeg opus-tools
+sudo apt install ffmpeg opus-tools
 ```
 
 ## Setup
