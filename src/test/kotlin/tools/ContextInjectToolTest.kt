@@ -63,6 +63,15 @@ class ContextInjectToolTest {
     }
 
     @Test
+    fun `inject at position 0 is clamped after system message`() = runTest {
+        tool.execute(mapOf("role" to "system", "content" to "clamped", "index" to 0.0))
+        assertEquals(3, ctx.size)
+        // Clamped to position 1, after system message at 0
+        assertEquals("sys", ctx.toList()[0].content)
+        assertEquals("clamped", ctx.toList()[1].content)
+    }
+
+    @Test
     fun `parameters include required fields`() {
         val params = tool.parameters
         val required = params["required"] as? List<*>

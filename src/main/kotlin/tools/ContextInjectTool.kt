@@ -18,7 +18,7 @@ class ContextInjectTool(private val ctx: Context) : Tool {
             ),
             "index" to mapOf(
                 "type" to "number",
-                "description" to "Position to insert at (0 = beginning, omit = end). Cannot insert before system messages."
+                "description" to "Position to insert at (omit = end). Automatically clamped to after system messages."
             )
         ),
         "required" to listOf("role", "content")

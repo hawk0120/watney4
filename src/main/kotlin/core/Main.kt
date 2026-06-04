@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import utils.AppConfig
 import tools.BashTool
 import tools.ContextInjectTool
+import tools.ContextStatusTool
 import tools.ContextTruncateTool
 import tools.CronTool
 import tools.ForgetMemoryTool
@@ -70,7 +71,8 @@ fun main() = runBlocking {
         SaveMemoryTool(memory),
         ForgetMemoryTool(memory),
         ContextTruncateTool(ctx),
-        ContextInjectTool(ctx)
+        ContextInjectTool(ctx),
+        ContextStatusTool(ctx)
     ))
 
     val agent = Agent(

@@ -104,11 +104,37 @@ class ContextTest {
     }
 
     @Test
-    fun `inject at position 0`() {
+    fun `inject at position 0 is clamped after system messages`() {
         ctx.inject("system", "at start", index = 0)
         assertEquals(8, ctx.size)
-        assertEquals("at start", messages[0].content)
-        assertEquals("You are a helpful assistant", messages[1].content)
+        // index 0 is clamped to 1 (after the first system message)
+        assertEquals("You are a helpful assistant", messages[0].content)
+        assertEquals("at start", messages[1].content)
+    }
+
+    @Test
+    fun `inject before system messages is clamped`() {
+        ctx.inject("system", "also sys", index = 0)
+        // Clamped to position 1 (after existing system msg at 0)
+        assertEquals("You are a helpful assistant", messages[0].content)
+        assertEquals("also sys", messages[1].content)
+    }
+
+    @Test
+    fun `inject with multiple system messages clamps correctly`() {
+        val c = Context()
+        val msgs = mutableListOf(
+            ChatMessage("system", "first sys"),
+            ChatMessage("system", "second sys"),
+            ChatMessage("user", "hello")
+        )
+        c.bind(msgs)
+        c.inject("user", "injected", index = 0)
+        // Clamped to position 2 (after 2 system messages)
+        assertEquals("first sys", msgs[0].content)
+        assertEquals("second sys", msgs[1].content)
+        assertEquals("injected", msgs[2].content)
+        assertEquals("hello", msgs[3].content)
     }
 
     @Test

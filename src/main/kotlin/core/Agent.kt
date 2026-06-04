@@ -136,6 +136,9 @@ class Agent(
                 "write" -> (call.arguments["filePath"] as? String)?.let { "`$it`" } ?: "running..."
                 "read" -> (call.arguments["filePath"] as? String)?.let { "`$it`" } ?: "running..."
                 "opencode" -> (call.arguments["task"] as? String)?.let { it.take(120) } ?: "running..."
+                "context_truncate" -> (call.arguments["keepLast"] as? Double)?.toInt()?.let { "keep last $it" } ?: "running..."
+                "context_inject" -> (call.arguments["role"] as? String)?.let { "role=$it" } ?: "running..."
+                "context_status" -> "checking..."
                 else -> "running..."
             }
             progress("**${call.name}** — $detail")

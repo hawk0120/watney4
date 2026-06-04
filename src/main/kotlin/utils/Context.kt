@@ -31,10 +31,18 @@ class Context {
 
     fun inject(role: String, content: String, index: Int? = null): String {
         val msgs = checkNotNull(messages) { "Context not bound" }
-        val msg = ChatMessage(role, content)
-        val pos = if (index != null && index in 0..msgs.size) index else msgs.size
-        msgs.add(pos, msg)
-        return "Injected $role message (${content.length} chars) at position $pos. Total: ${msgs.size}"
+        val chatMsg = ChatMessage(role, content)
+        val systemCount = msgs.count { it.role == "system" }
+        val minIndex = systemCount
+        val clampedIndex = if (index != null) index.coerceIn(minIndex, msgs.size) else msgs.size
+        msgs.add(clampedIndex, chatMsg)
+        val clamped = index != null && clampedIndex != index
+        return buildString {
+            append("Injected $role message (${content.length} chars)")
+            if (clamped) append(" at clamped position $clampedIndex (requested $index, min=$minIndex)")
+            else append(" at position $clampedIndex")
+            append(". Total: ${msgs.size}")
+        }
     }
 
     fun clearNonSystem(): Int {
