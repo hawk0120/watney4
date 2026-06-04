@@ -10,6 +10,7 @@ import tools.BashTool
 import tools.ContextInjectTool
 import tools.ContextStatusTool
 import tools.ContextTruncateTool
+import tools.SystemStatusTool
 import tools.CronTool
 import tools.ForgetMemoryTool
 import tools.GlobTool
@@ -72,7 +73,8 @@ fun main() = runBlocking {
         ForgetMemoryTool(memory),
         ContextTruncateTool(ctx),
         ContextInjectTool(ctx),
-        ContextStatusTool(ctx)
+        ContextStatusTool(ctx),
+        SystemStatusTool()
     ))
 
     val agent = Agent(

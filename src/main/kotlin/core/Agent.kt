@@ -139,6 +139,7 @@ class Agent(
                 "context_truncate" -> (call.arguments["keepLast"] as? Double)?.toInt()?.let { "keep last $it" } ?: "running..."
                 "context_inject" -> (call.arguments["role"] as? String)?.let { "role=$it" } ?: "running..."
                 "context_status" -> "checking..."
+                "system_status" -> "checking..."
                 else -> "running..."
             }
             progress("**${call.name}** — $detail")
