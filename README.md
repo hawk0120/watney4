@@ -1,6 +1,6 @@
 # Watney4
 
-A personal AI assistant that runs via CLI and Discord DM, powered by Mistral AI with function-calling tools, SQLite memory, voice chat, and local TTS.
+Yet another AI agent that runs via CLI and Discord DM, powered by Mistral AI with function-calling tools, SQLite memory, voice chat, and local TTS.
 
 ## Architecture
 
