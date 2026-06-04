@@ -7,6 +7,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import utils.AppConfig
 import tools.BashTool
+import tools.ContextInjectTool
+import tools.ContextTruncateTool
 import tools.CronTool
 import tools.ForgetMemoryTool
 import tools.GlobTool
@@ -19,10 +21,11 @@ import tools.ToolRegistry
 import tools.WebFetchTool
 import tools.WebSearchTool
 import tools.WriteTool
-import utils.VoiceChatManager
 import utils.CronScheduler
+import utils.Context
 import utils.Logger
 import utils.MemoryStore
+import utils.VoiceChatManager
 
 fun main() = runBlocking {
     val config = AppConfig.load()
@@ -51,6 +54,8 @@ fun main() = runBlocking {
     cronScheduler.init()
     launch { cronScheduler.start() }
 
+    val ctx = Context()
+
     val tools = ToolRegistry(listOf(
         ReadTool(),
         WriteTool(),
@@ -63,13 +68,16 @@ fun main() = runBlocking {
         CronTool(cronScheduler),
         MemorySearchTool(memory),
         SaveMemoryTool(memory),
-        ForgetMemoryTool(memory)
+        ForgetMemoryTool(memory),
+        ContextTruncateTool(ctx),
+        ContextInjectTool(ctx)
     ))
 
     val agent = Agent(
         inbox = inbox,
         llm = AppConfig.createProvider(config),
         tools = tools,
+        ctx = ctx,
         logLevel = config.logLevel,
         memory = memory
     )

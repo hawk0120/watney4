@@ -5,6 +5,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import java.util.concurrent.atomic.AtomicLong
 import utils.ChatMessage
+import utils.Context
 import utils.IncomingMessage
 import utils.LLMProvider
 import utils.LLMResult
@@ -18,6 +19,7 @@ class Agent(
     private val inbox: ReceiveChannel<IncomingMessage>,
     private val llm: LLMProvider,
     private val tools: ToolRegistry? = null,
+    private val ctx: Context = Context(),
     private val persona: Watney4 = Watney4(),
     private val logLevel: LogLevel = LogLevel.INFO,
     private val memory: MemoryStore? = null
@@ -29,6 +31,7 @@ class Agent(
     private val maxToolIterations = 10
 
     suspend fun run() {
+        ctx.bind(messages)
         installShutdownHook()
         memory?.init()
         messages.add(ChatMessage("system", persona.whoAmI()))
