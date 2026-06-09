@@ -232,14 +232,14 @@ class DiscordBot(
             log.warn("No DM channel to reply to")
             return
         }
-        val truncated = if (text.length > 1990) {
-            val suffix = "\n\n*(truncated — ${text.length} chars total)*"
-            val maxBody = 2000 - suffix.length
-            log.warn("Truncating message from ${text.length} to $maxBody chars")
-            text.take(maxBody) + suffix
-        } else text
-        channel.sendMessage(truncated).queue()
-        log.debug("Sent ${truncated.length} chars to DM")
+        val chunks = if (text.length > 1990) {
+            log.warn("Splitting message of ${text.length} chars into multiple messages")
+            splitIntoChunks(text, 1990)
+        } else listOf(text)
+        chunks.forEach { chunk ->
+            channel.sendMessage(chunk).queue()
+        }
+        log.debug("Sent ${text.length} chars across ${chunks.size} message(s) to DM")
 
         if (voiceMode) {
             val ttsText = text.take(tts.maxChars)
@@ -257,6 +257,23 @@ class DiscordBot(
         }
 
         voiceChat?.speak(text)
+    }
+
+    private fun splitIntoChunks(text: String, maxLen: Int): List<String> {
+        val chunks = mutableListOf<String>()
+        var remaining = text
+        while (remaining.isNotEmpty()) {
+            if (remaining.length <= maxLen) {
+                chunks.add(remaining)
+                break
+            }
+            var splitAt = remaining.lastIndexOf('\n', maxLen)
+            if (splitAt < 1) splitAt = remaining.lastIndexOf(' ', maxLen)
+            if (splitAt < 1) splitAt = maxLen
+            chunks.add(remaining.substring(0, splitAt))
+            remaining = remaining.substring(splitAt).trimStart()
+        }
+        return chunks
     }
 
     private fun describeAttachment(a: net.dv8tion.jda.api.entities.Message.Attachment): String {

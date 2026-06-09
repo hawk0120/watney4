@@ -18,7 +18,7 @@ data class CronJob(
 class CronScheduler(
     private val dbPath: String,
     private val inbox: SendChannel<IncomingMessage>,
-    private val replyTo: ChatInterface,
+    private val replyTo: ChatInterface = SelfChatInterface(),
     private val logLevel: LogLevel = LogLevel.INFO
 ) {
     private val log = Logger.getLogger("CronScheduler", logLevel)
@@ -112,7 +112,7 @@ class CronScheduler(
 
         for ((id, prompt) in due) {
             log.info("Firing cron job #$id: \"$prompt\"")
-            inbox.trySend(IncomingMessage("[Cron] $prompt", replyTo))
+            inbox.trySend(IncomingMessage("[Cron] $prompt", replyTo, "cron"))
             val update = conn!!.prepareStatement("UPDATE cron_jobs SET last_run_at = ? WHERE id = ?")
             update.setLong(1, now)
             update.setInt(2, id)

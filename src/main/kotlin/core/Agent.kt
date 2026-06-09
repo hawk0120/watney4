@@ -12,6 +12,7 @@ import utils.LLMResult
 import utils.LogLevel
 import utils.Logger
 import utils.MemoryStore
+import utils.HookRegistry
 import tools.ToolCall
 import tools.ToolRegistry
 
@@ -22,7 +23,8 @@ class Agent(
     private val ctx: Context = Context(),
     private val persona: Watney4 = Watney4(),
     private val logLevel: LogLevel = LogLevel.INFO,
-    private val memory: MemoryStore? = null
+    private val memory: MemoryStore? = null,
+    private val hooks: HookRegistry = HookRegistry()
 ) {
     private val log = Logger.getLogger("Agent", logLevel)
     private val messages = mutableListOf<ChatMessage>()
@@ -63,7 +65,10 @@ class Agent(
                 break
             }
 
-            val msg = inbox.receiveCatching().getOrNull() ?: break
+            var msg = inbox.receiveCatching().getOrNull() ?: break
+            if (!hooks.isEmpty) {
+                msg = hooks.intercept(msg) ?: continue
+            }
             val trimmed = msg.text.trim()
 
             if (trimmed.equals("/exit", ignoreCase = true) ||
@@ -83,8 +88,9 @@ class Agent(
                 continue
             }
 
-            messages.add(ChatMessage("user", trimmed))
-            memory?.saveMessage("user", trimmed)
+            val contextText = if (msg.type != "user") "[${msg.type}] $trimmed" else trimmed
+            messages.add(ChatMessage("user", contextText))
+            memory?.saveMessage("user", contextText)
             log.debug("Input from ${msg.replyTo.label} (${trimmed.length} chars): ${trimmed.take(80)}...")
 
             val progress = throttledProgress { text -> msg.replyTo.sendMessage(text) }

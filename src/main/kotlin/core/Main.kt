@@ -18,6 +18,7 @@ import tools.GrepTool
 import tools.MemorySearchTool
 import tools.OpencodeTool
 import tools.ReadTool
+import tools.RemindTool
 import tools.SaveMemoryTool
 import tools.ToolRegistry
 import tools.WebFetchTool
@@ -25,8 +26,11 @@ import tools.WebSearchTool
 import tools.WriteTool
 import utils.CronScheduler
 import utils.Context
+import utils.HookRegistry
 import utils.Logger
 import utils.MemoryStore
+import utils.ReminderScheduler
+import utils.SelfChatInterface
 import utils.VoiceChatManager
 
 fun main() = runBlocking {
@@ -46,11 +50,14 @@ fun main() = runBlocking {
     discord.voiceChat = voiceChat
 
     val memory = MemoryStore(config.memoryDbPath)
+    val selfChat = SelfChatInterface()
+
+    val reminderScheduler = ReminderScheduler(inbox, selfChat, this)
 
     val cronScheduler = CronScheduler(
         dbPath = config.memoryDbPath,
         inbox = inbox,
-        replyTo = discord,
+        replyTo = selfChat,
         logLevel = config.logLevel
     )
     cronScheduler.init()
@@ -68,6 +75,7 @@ fun main() = runBlocking {
         WebFetchTool(),
         WebSearchTool(),
         CronTool(cronScheduler),
+        RemindTool(reminderScheduler),
         MemorySearchTool(memory),
         SaveMemoryTool(memory),
         ForgetMemoryTool(memory),
@@ -83,7 +91,8 @@ fun main() = runBlocking {
         tools = tools,
         ctx = ctx,
         logLevel = config.logLevel,
-        memory = memory
+        memory = memory,
+        hooks = HookRegistry()
     )
     agent.run()
     voiceChat.leave()

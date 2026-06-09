@@ -46,6 +46,7 @@ src/main/resources/application.properties
 
 # SQLite db
 watney4.db
+kls_database.db
 
 # Piper TTS binaries and voice models
 piper/
