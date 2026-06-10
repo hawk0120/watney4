@@ -30,7 +30,7 @@ class Agent(
     private val messages = mutableListOf<ChatMessage>()
     private var shutdownRequested = false
     private var turnCount = 0
-    private val maxToolIterations = 10
+    private val maxToolIterations = 15
 
     suspend fun run() {
         ctx.bind(messages)
@@ -141,6 +141,14 @@ class Agent(
                 "bash" -> (call.arguments["command"] as? String)?.let { "`$it`" } ?: "running..."
                 "write" -> (call.arguments["filePath"] as? String)?.let { "`$it`" } ?: "running..."
                 "read" -> (call.arguments["filePath"] as? String)?.let { "`$it`" } ?: "running..."
+                "glob" -> (call.arguments["pattern"] as? String)?.let { "`$it`" } ?: "running..."
+                "grep" -> (call.arguments["pattern"] as? String)?.let { "`$it`" } ?: "running..."
+                "web_search" -> (call.arguments["query"] as? String)?.let { it.take(80) } ?: "running..."
+                "web_fetch" -> (call.arguments["url"] as? String)?.let { "`$it`" } ?: "running..."
+                "cron" -> (call.arguments["action"] as? String)?.let { it } ?: "running..."
+                "memory_search" -> (call.arguments["query"] as? String)?.let { it.take(80) } ?: "running..."
+                "save_memory" -> (call.arguments["key"] as? String)?.let { "key=$it" } ?: "running..."
+                "forget_memory" -> (call.arguments["key"] as? String)?.let { "key=$it" } ?: "running..."
                 "opencode" -> (call.arguments["task"] as? String)?.let { it.take(120) } ?: "running..."
                 "context_truncate" -> (call.arguments["keepLast"] as? Double)?.toInt()?.let { "keep last $it" } ?: "running..."
                 "context_inject" -> (call.arguments["role"] as? String)?.let { "role=$it" } ?: "running..."

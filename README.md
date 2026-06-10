@@ -191,7 +191,7 @@ src/main/kotlin/
     ├── Context.kt           # Context window manager
     ├── MemoryStore.kt       # SQLite messages + memories + cron_jobs
     ├── CronScheduler.kt     # Background cron checker
-    ├── TtsGenerator.kt      # espeak-ng → ogg
+    ├── TtsGenerator.kt      # Piper → ogg
     ├── VoiceChatManager.kt  # Voice join/leave, STT, send TTS to channel
     ├── Config.kt            # AppConfig from application.properties
     └── Logger.kt            # Structured logging
