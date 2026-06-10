@@ -2,6 +2,7 @@ package core
 
 import interfaces.Cli
 import interfaces.DiscordBot
+import interfaces.MatrixBot
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -41,10 +42,14 @@ fun main() = runBlocking {
 
     val cli = Cli(config.logLevel)
     val discord = DiscordBot(config.discordToken, config.logLevel)
+    val matrix = if (config.matrixHomeserver.isNotBlank()) {
+        MatrixBot(config.matrixHomeserver, config.matrixUsername, config.matrixPassword, config.logLevel)
+    } else null
     val inbox = Channel<utils.IncomingMessage>(Channel.UNLIMITED)
 
     launch { cli.start(inbox) }
     launch { discord.start(inbox) }
+    if (matrix != null) launch { matrix.start(inbox) }
 
     val voiceChat = VoiceChatManager(inbox, discord, config.logLevel)
     discord.voiceChat = voiceChat
@@ -100,5 +105,6 @@ fun main() = runBlocking {
 
     cli.stop()
     discord.stop()
+    matrix?.stop()
     log.info("Watney4 stopped")
 }

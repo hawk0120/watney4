@@ -12,7 +12,10 @@ data class AppConfig(
     val llamaBaseUrl: String,
     val llamaModel: String,
     val discordToken: String,
-    val memoryDbPath: String
+    val memoryDbPath: String,
+    val matrixHomeserver: String = "",
+    val matrixUsername: String = "",
+    val matrixPassword: String = ""
 ) {
     companion object {
         fun load(): AppConfig {
@@ -32,7 +35,10 @@ data class AppConfig(
                 llamaModel = props.getProperty("llama.model", "gemma4:e2b"),
                 discordToken = props.getProperty("discord.token")
                     ?: error("discord.token is required in application.properties"),
-                memoryDbPath = props.getProperty("memory.db-path", "watney4.db")
+                memoryDbPath = props.getProperty("memory.db-path", "watney4.db"),
+                matrixHomeserver = props.getProperty("matrix.homeserver", ""),
+                matrixUsername = props.getProperty("matrix.username", ""),
+                matrixPassword = props.getProperty("matrix.password", "")
             )
         }
 
