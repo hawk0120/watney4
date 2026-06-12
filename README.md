@@ -1,6 +1,8 @@
 # Watney4
 
-My personal AI assistant. Runs on my homelab, talks through Discord DMs and the terminal. Powered by Mistral AI with tool calling, SQLite memory, voice chat, and local TTS.
+A personal AI assistant and research platform for exploring memory, retrieval, transparency, and human-AI interaction.
+
+Runs on my homelab, talks through Discord DMs and the terminal, and combines LLMs, tool use, long-term memory, and voice interfaces in a system I fully control.
 
 This is the fourth agent I've built — Thomas, Flash, Martha, now Watney. Each one got closer to what I actually wanted. This one is the first I'd call production grade.
 
@@ -17,6 +19,27 @@ Discord┘                  │
 ```
 
 The voice chat path is separate — audio comes in through Discord's voice API, gets transcribed with Vosk, and the text gets injected into the same channel.
+
+
+## Research Relevance
+
+Watney4 is more than a personal AI assistant. It serves as a platform for exploring questions at the intersection of Human-Computer Interaction (HCI) and Large Language Models (LLMs).
+
+Many AI systems focus on model capability. I'm interested in how people interact with increasingly capable systems.
+
+Watney4 provides a foundation for investigating questions such as:
+
+* How should AI assistants manage memory?
+* What information should be remembered?
+* How should remembered information be surfaced to users?
+* How do transparency and citations affect trust?
+* How should AI systems communicate uncertainty?
+* What forms of control do users expect over personal AI systems?
+* How do local AI deployments affect privacy and user behaviour?
+
+Future versions may include experimental features designed to evaluate different approaches to memory, retrieval, transparency, explanation, and user control.
+
+In that sense, Watney4 is both a useful personal assistant and a research platform for studying human-centred AI systems.
 
 ## Why build this?
 
