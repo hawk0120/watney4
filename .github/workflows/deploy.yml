@@ -1,0 +1,40 @@
+name: Deploy to bitnest5
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy and build on bitnest5
+        run: |
+          ssh hawk0120@${{ secrets.DEPLOY_HOST }} "
+            set -e
+            cd /home/hawk0120/dev/kotlin/watney4
+            git pull origin main
+            ./gradlew build
+          "
+
+      - name: Restart bot
+        run: |
+          ssh hawk0120@${{ secrets.DEPLOY_HOST }} "
+            pkill -f 'core.MainKt' 2>/dev/null || true
+            pkill -f 'watney4' 2>/dev/null || true
+            cd /home/hawk0120/dev/kotlin/watney4
+            nohup ./gradlew run > /tmp/watney4.log 2>&1 &
+            echo 'Bot restarted. PID: \$!'
+            sleep 2
+            echo 'Log tail:'
+            tail -3 /tmp/watney4.log
+          "
