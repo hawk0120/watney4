@@ -46,7 +46,8 @@ class DiscordBot(
         jda = JDABuilder.createDefault(token)
             .enableIntents(
                 GatewayIntent.MESSAGE_CONTENT,
-                GatewayIntent.GUILD_MEMBERS
+                GatewayIntent.GUILD_MEMBERS,
+                GatewayIntent.GUILD_VOICE_STATES
             )
             .setMemberCachePolicy(MemberCachePolicy.ALL)
             .addEventListeners(EventListener { event ->
@@ -227,6 +228,7 @@ class DiscordBot(
     }
 
     override suspend fun sendMessage(text: String) {
+        voiceChat?.speak(text)
         val channel = lastChannel
         if (channel == null) {
             log.warn("No DM channel to reply to")
@@ -255,8 +257,6 @@ class DiscordBot(
                 log.warn("TTS generation failed")
             }
         }
-
-        voiceChat?.speak(text)
     }
 
     private fun splitIntoChunks(text: String, maxLen: Int): List<String> {

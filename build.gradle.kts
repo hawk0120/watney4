@@ -9,23 +9,14 @@ plugins {
 
 repositories {
     mavenCentral()
-    google()
 }
-
-val trixnityVersion = "5.6.0"
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.9.0")
     implementation("net.dv8tion:JDA:5.2.2")
     implementation("org.xerial:sqlite-jdbc:3.46.1.3")
-
-    implementation(platform("de.connect2x.trixnity:trixnity-bom:$trixnityVersion"))
-    implementation("de.connect2x.trixnity:trixnity-clientserverapi-client")
-    implementation("io.ktor:ktor-client-java:3.4.0")
-    implementation("de.connect2x.lognity:lognity-core:2.1.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
     testImplementation("io.mockk:mockk:1.13.13")

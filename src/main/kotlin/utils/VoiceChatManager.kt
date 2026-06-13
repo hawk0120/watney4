@@ -25,6 +25,7 @@ class VoiceChatManager(
     private val audioBuffer = ByteArrayOutputStream()
     private var silenceFrames = 0
     private var hasSpeech = false
+    @Volatile private var isSpeaking = false
     private val voskModelPath = System.getProperty("user.home") + "/.cache/vosk/vosk-model-small-en-us-0.15"
     private val piperBin = "$piperPath/piper"
     private val modelPath = "$piperPath/$voiceModel"
@@ -77,31 +78,36 @@ class VoiceChatManager(
             wavFile.delete(); rawFile.delete()
             if (pcm.size < 3840) return
 
+            isSpeaking = true
             ch.guild.audioManager.setSendingHandler(TtsSendHandler(pcm))
             log.debug("Playing TTS in voice channel (${pcm.size} bytes)")
+
+            val durationMs = (pcm.size.toLong() * 1000) / 192000
+            Thread {
+                try {
+                    val elapsed = durationMs + 500L
+                    val sleep = (elapsed / 20L) * 20L
+                    Thread.sleep(sleep)
+                } catch (_: InterruptedException) {}
+                isSpeaking = false
+            }.start()
         } catch (e: Exception) {
             log.error("TTS playback failed: ${e.message}")
+            isSpeaking = false
         }
     }
-
-    private var userAudioCount = 0
 
     private inner class VoiceReceiveHandler : AudioReceiveHandler {
         override fun canReceiveCombined(): Boolean = true
         override fun canReceiveUser(): Boolean = true
 
-        private var frameCount = 0
-
         override fun handleUserAudio(audio: UserAudio) {
-            userAudioCount++
-            log.debug("[AudioReceive] User audio #$userAudioCount from ${audio.user.effectiveName}: ${audio.getAudioData(1.0).size} bytes")
         }
 
         override fun handleCombinedAudio(audio: CombinedAudio) {
+            if (isSpeaking) return
             val raw = audio.getAudioData(1.0)
             if (raw.size < 4) return
-            frameCount++
-            if (frameCount % 50 == 0) log.debug("Audio handler called: $frameCount frames received (${raw.size} bytes each)")
             val shorts = ShortArray(raw.size / 2)
             for (i in shorts.indices) {
                 shorts[i] = ((raw[i * 2].toInt() and 0xFF) or (raw[i * 2 + 1].toInt() shl 8)).toShort()
@@ -142,16 +148,18 @@ class VoiceChatManager(
                     audioBuffer.write((downsampled[i].toInt() shr 8) and 0xFF)
                 }
                 silenceFrames++
-                if (silenceFrames >= 60) processUtterance()
+                if (silenceFrames >= 60) {
+                    val pcm = audioBuffer.toByteArray()
+                    audioBuffer.reset()
+                    silenceFrames = 0
+                    hasSpeech = false
+                    Thread { processPcm(pcm) }.start()
+                }
             }
         }
     }
 
-    private fun processUtterance() {
-        val pcm = audioBuffer.toByteArray()
-        audioBuffer.reset()
-        silenceFrames = 0
-        hasSpeech = false
+    private fun processPcm(pcm: ByteArray) {
         log.debug("Processing utterance: ${pcm.size} bytes of PCM")
         if (pcm.size < 16000) {
             log.debug("Utterance too short (${pcm.size} bytes < 16000), skipping")

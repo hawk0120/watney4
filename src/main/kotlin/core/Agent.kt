@@ -12,7 +12,6 @@ import utils.LLMResult
 import utils.LogLevel
 import utils.Logger
 import utils.MemoryStore
-import utils.HookRegistry
 import tools.ToolCall
 import tools.ToolRegistry
 
@@ -23,8 +22,7 @@ class Agent(
     private val ctx: Context = Context(),
     private val persona: Watney4 = Watney4(),
     private val logLevel: LogLevel = LogLevel.INFO,
-    private val memory: MemoryStore? = null,
-    private val hooks: HookRegistry = HookRegistry()
+    private val memory: MemoryStore? = null
 ) {
     private val log = Logger.getLogger("Agent", logLevel)
     private val messages = mutableListOf<ChatMessage>()
@@ -65,10 +63,7 @@ class Agent(
                 break
             }
 
-            var msg = inbox.receiveCatching().getOrNull() ?: break
-            if (!hooks.isEmpty) {
-                msg = hooks.intercept(msg) ?: continue
-            }
+            val msg = inbox.receiveCatching().getOrNull() ?: break
             val trimmed = msg.text.trim()
 
             if (trimmed.equals("/exit", ignoreCase = true) ||

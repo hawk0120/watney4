@@ -26,7 +26,6 @@ import tools.WebSearchTool
 import tools.WriteTool
 import utils.CronScheduler
 import utils.Context
-import utils.HookRegistry
 import utils.Logger
 import utils.MemoryStore
 import utils.ReminderScheduler
@@ -91,8 +90,7 @@ fun main() = runBlocking {
         tools = tools,
         ctx = ctx,
         logLevel = config.logLevel,
-        memory = memory,
-        hooks = HookRegistry()
+        memory = memory
     )
     agent.run()
     voiceChat.leave()

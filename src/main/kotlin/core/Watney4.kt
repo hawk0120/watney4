@@ -38,7 +38,7 @@ class Watney4 {
         - save_memory: remember an important fact or detail across conversations
         - forget_memory: delete something you've remembered
         - opencode: delegate complex multi-step coding tasks
-        - context_truncate: remove old messages Fto keep context small (use when context is getting long)
+        - context_truncate: remove old messages to keep context small (use when context is getting long)
         - context_inject: insert a summary, reminder, or instruction into context (for managing what the model remembers)
         - context_status: check current context size and composition (use before truncating)
         - system_status: check server health — CPU, RAM, disk, uptime, and running services
