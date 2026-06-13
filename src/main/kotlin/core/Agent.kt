@@ -88,6 +88,8 @@ class Agent(
             memory?.saveMessage("user", contextText)
             log.debug("Input from ${msg.replyTo.label} (${trimmed.length} chars): ${trimmed.take(80)}...")
 
+            val turnStartTime = System.currentTimeMillis()
+            val toolsUsedInTurn = mutableListOf<String>()
             val progress = throttledProgress { text -> msg.replyTo.sendMessage(text) }
             var done = false
 
@@ -101,12 +103,25 @@ class Agent(
                             messages.add(ChatMessage("assistant", response))
                             memory?.saveMessage("assistant", response)
                             turnCount++
-                            log.info("Turn $turnCount complete — ${messages.size} messages in context")
+                            val elapsed = System.currentTimeMillis() - turnStartTime
+                            log.info("Turn $turnCount complete — ${messages.size} messages in context, ${elapsed}ms")
                             msg.replyTo.sendMessage(response)
                             done = true
+                            memory?.logInteraction(
+                                turnNumber = turnCount,
+                                userMessage = contextText,
+                                assistantResponse = response,
+                                model = llm.modelName,
+                                responseTimeMs = elapsed,
+                                toolsUsed = toolsUsedInTurn.joinToString(", ").ifEmpty { null },
+                                promptTokens = result.promptTokens,
+                                completionTokens = result.completionTokens,
+                                totalTokens = result.totalTokens
+                            )
                             break
                         }
 
+                        toolsUsedInTurn.addAll(result.calls.map { it.name })
                         if (result.response.isNotBlank()) {
                             msg.replyTo.sendMessage(result.response)
                         }

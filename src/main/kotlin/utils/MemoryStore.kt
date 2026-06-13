@@ -35,6 +35,24 @@ class MemoryStore(private val dbPath: String) {
             )
             """.trimIndent()
         )
+        conn!!.createStatement().execute(
+            """
+            CREATE TABLE IF NOT EXISTS interaction_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL DEFAULT (datetime('now')),
+                turn_number INTEGER NOT NULL,
+                user_message TEXT NOT NULL,
+                assistant_response TEXT,
+                model TEXT,
+                response_time_ms INTEGER,
+                tools_used TEXT,
+                prompt_tokens INTEGER,
+                completion_tokens INTEGER,
+                total_tokens INTEGER,
+                experiment_mode TEXT
+            )
+            """.trimIndent()
+        )
     }
 
     fun saveMessage(role: String, content: String) {
@@ -112,6 +130,40 @@ class MemoryStore(private val dbPath: String) {
         val rows = stmt.executeUpdate()
         stmt.close()
         return rows > 0
+    }
+
+    fun logInteraction(
+        turnNumber: Int,
+        userMessage: String,
+        assistantResponse: String?,
+        model: String?,
+        responseTimeMs: Long,
+        toolsUsed: String?,
+        promptTokens: Int?,
+        completionTokens: Int?,
+        totalTokens: Int?,
+        experimentMode: String? = null
+    ) {
+        val stmt = conn!!.prepareStatement(
+            """
+            INSERT INTO interaction_log 
+                (turn_number, user_message, assistant_response, model, response_time_ms, 
+                 tools_used, prompt_tokens, completion_tokens, total_tokens, experiment_mode)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """.trimIndent()
+        )
+        stmt.setInt(1, turnNumber)
+        stmt.setString(2, userMessage)
+        if (assistantResponse != null) stmt.setString(3, assistantResponse) else stmt.setNull(3, java.sql.Types.VARCHAR)
+        if (model != null) stmt.setString(4, model) else stmt.setNull(4, java.sql.Types.VARCHAR)
+        stmt.setLong(5, responseTimeMs)
+        if (toolsUsed != null) stmt.setString(6, toolsUsed) else stmt.setNull(6, java.sql.Types.VARCHAR)
+        if (promptTokens != null) stmt.setInt(7, promptTokens) else stmt.setNull(7, java.sql.Types.INTEGER)
+        if (completionTokens != null) stmt.setInt(8, completionTokens) else stmt.setNull(8, java.sql.Types.INTEGER)
+        if (totalTokens != null) stmt.setInt(9, totalTokens) else stmt.setNull(9, java.sql.Types.INTEGER)
+        if (experimentMode != null) stmt.setString(10, experimentMode) else stmt.setNull(10, java.sql.Types.VARCHAR)
+        stmt.executeUpdate()
+        stmt.close()
     }
 
     fun close() {

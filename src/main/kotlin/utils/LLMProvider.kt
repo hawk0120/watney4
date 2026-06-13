@@ -11,11 +11,19 @@ data class ChatMessage(
 )
 
 sealed class LLMResult {
-    data class Success(val response: String, val calls: List<ToolCall>? = null) : LLMResult()
+    data class Success(
+        val response: String,
+        val calls: List<ToolCall>? = null,
+        val promptTokens: Int? = null,
+        val completionTokens: Int? = null,
+        val totalTokens: Int? = null,
+        val elapsedMs: Long = 0
+    ) : LLMResult()
     data class Error(val message: String) : LLMResult()
 }
 
 interface LLMProvider {
+    val modelName: String
     suspend fun query(messages: List<ChatMessage>, tools: List<Map<String, Any>>? = null): LLMResult
     suspend fun isAvailable(): Boolean
 }

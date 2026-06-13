@@ -70,6 +70,7 @@ class MistralProvider(
     private val baseUrl: String = "https://api.mistral.ai/v1/chat/completions",
     private val logLevel: LogLevel = LogLevel.INFO
 ) : LLMProvider {
+    override val modelName: String get() = model
     private val log = Logger.getLogger("MistralProvider", logLevel)
     private val gson = Gson()
 
@@ -154,7 +155,14 @@ class MistralProvider(
             } else {
                 log.info("Query OK — ${elapsed}ms, response=${content.length} chars")
             }
-            LLMResult.Success(content, calls?.ifEmpty { null })
+            LLMResult.Success(
+                response = content,
+                calls = calls?.ifEmpty { null },
+                promptTokens = parsed.usage?.prompt_tokens,
+                completionTokens = parsed.usage?.completion_tokens,
+                totalTokens = parsed.usage?.total_tokens,
+                elapsedMs = elapsed
+            )
         } catch (e: Exception) {
             val elapsed = java.time.Duration.between(start, Instant.now()).toMillis()
             log.error("Query failed after ${elapsed}ms: ${e.message}")

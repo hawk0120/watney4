@@ -20,6 +20,7 @@ class LlamaCppProvider(
     private val model: String = "gemma4:e2b",
     private val logLevel: LogLevel = LogLevel.INFO
 ) : LLMProvider {
+    override val modelName: String get() = "llamacpp:$model"
     private val log = Logger.getLogger("LlamaCppProvider", logLevel)
     private val gson = Gson()
 
@@ -45,7 +46,10 @@ class LlamaCppProvider(
 
             val elapsed = java.time.Duration.between(start, Instant.now()).toMillis()
             log.info("Query OK — ${elapsed}ms, response=${parsed.response.length} chars")
-            LLMResult.Success(parsed.response)
+            LLMResult.Success(
+                response = parsed.response,
+                elapsedMs = elapsed
+            )
         } catch (e: Exception) {
             val elapsed = java.time.Duration.between(start, Instant.now()).toMillis()
             log.error("Query failed after ${elapsed}ms: ${e.message}")
