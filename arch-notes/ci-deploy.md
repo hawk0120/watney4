@@ -26,3 +26,23 @@ Set in Forgejo repo → Settings → Actions → Secrets:
 Forgejo Actions needs a registered runner. The runner must have:
 - Network access to both the Forgejo instance and bitnest5
 - Java 21 / Gradle are not needed on the runner — the actual build happens on bitnest5
+
+### Install runner on bitnest5
+
+```bash
+# Download forgejo-runner
+sudo curl -sLo /usr/local/bin/forgejo-runner \
+  https://code.forgejo.org/forgejo/runner/releases/latest/download/forgejo-runner-linux-amd64
+sudo chmod +x /usr/local/bin/forgejo-runner
+
+# Register it (get a token from Forgejo web UI: Settings → Actions → Runners → Create Runner)
+forgejo-runner register \
+  --instance http://100.114.88.76:30000 \
+  --name watney-runner \
+  --token <PASTE_TOKEN_HERE> \
+  --labels ubuntu-latest:docker://node:20-bookworm
+
+# Install as a service
+sudo forgejo-runner service install --config ~/.forgejo-runner/config.yml
+sudo forgejo-runner service start
+```
