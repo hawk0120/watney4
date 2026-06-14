@@ -90,7 +90,10 @@ fun main() = runBlocking {
         tools = tools,
         ctx = ctx,
         logLevel = config.logLevel,
-        memory = memory
+        memory = memory,
+        scope = this,
+        consolidationTimezone = config.consolidationTimezone,
+        consolidationHour = config.consolidationHour
     )
     agent.run()
     voiceChat.leave()

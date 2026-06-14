@@ -24,7 +24,9 @@ class ConfigTest {
             llamaBaseUrl = "http://localhost:8080",
             llamaModel = "test-llama",
             discordToken = "discord-test",
-            memoryDbPath = ":memory:"
+            memoryDbPath = ":memory:",
+            consolidationTimezone = "America/New_York",
+            consolidationHour = 4
         )
         assertEquals("mistral", config.provider)
         assertEquals(LogLevel.DEBUG, config.logLevel)
@@ -35,6 +37,8 @@ class ConfigTest {
         assertEquals("test-llama", config.llamaModel)
         assertEquals("discord-test", config.discordToken)
         assertEquals(":memory:", config.memoryDbPath)
+        assertEquals("America/New_York", config.consolidationTimezone)
+        assertEquals(4, config.consolidationHour)
     }
 
     @Test
@@ -48,12 +52,16 @@ class ConfigTest {
             llamaBaseUrl = "http://127.0.0.1:8080/completion",
             llamaModel = "gemma4:e2b",
             discordToken = "token",
-            memoryDbPath = "watney4.db"
+            memoryDbPath = "watney4.db",
+            consolidationTimezone = "Europe/Berlin",
+            consolidationHour = 3
         )
         assertEquals("ministral-8b-2512", config.mistralModel)
         assertEquals("https://api.mistral.ai/v1/chat/completions", config.mistralBaseUrl)
         assertEquals("http://127.0.0.1:8080/completion", config.llamaBaseUrl)
         assertEquals("gemma4:e2b", config.llamaModel)
         assertEquals("watney4.db", config.memoryDbPath)
+        assertEquals("Europe/Berlin", config.consolidationTimezone)
+        assertEquals(3, config.consolidationHour)
     }
 }

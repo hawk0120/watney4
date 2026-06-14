@@ -12,7 +12,9 @@ data class AppConfig(
     val llamaBaseUrl: String,
     val llamaModel: String,
     val discordToken: String,
-    val memoryDbPath: String
+    val memoryDbPath: String,
+    val consolidationTimezone: String,
+    val consolidationHour: Int
 ) {
     companion object {
         fun load(): AppConfig {
@@ -32,7 +34,9 @@ data class AppConfig(
                 llamaModel = props.getProperty("llama.model", "gemma4:e2b"),
                 discordToken = props.getProperty("discord.token")
                     ?: error("discord.token is required in application.properties"),
-                memoryDbPath = props.getProperty("memory.db-path", "watney4.db")
+                memoryDbPath = props.getProperty("memory.db-path", "watney4.db"),
+                consolidationTimezone = props.getProperty("consolidation.timezone", "Europe/Berlin"),
+                consolidationHour = props.getProperty("consolidation.hour", "3").toInt()
             )
         }
 
