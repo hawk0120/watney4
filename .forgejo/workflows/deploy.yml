@@ -7,6 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -17,24 +18,32 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: Deploy and build on bitnest5
+      - name: Deploy and build native image
         run: |
           ssh hawk0120@${{ secrets.DEPLOY_HOST }} "
             set -e
+
+            export JAVA_HOME=/usr/lib/jvm/graalvm
+            export PATH=\$JAVA_HOME/bin:\$PATH
+
             cd /home/hawk0120/dev/kotlin/watney4
+
             git pull origin main
-            ./gradlew build
+
+            ./gradlew nativeCompile
           "
 
-      - name: Restart bot
+      - name: Restart native app
         run: |
           ssh hawk0120@${{ secrets.DEPLOY_HOST }} "
-            pkill -f 'core.MainKt' 2>/dev/null || true
             pkill -f 'watney4' 2>/dev/null || true
+
             cd /home/hawk0120/dev/kotlin/watney4
-            nohup ./gradlew run > /tmp/watney4.log 2>&1 &
+
+            nohup ./build/native/nativeCompile/watney4 \
+              > /tmp/watney4.log 2>&1 &
+
             echo 'Bot restarted. PID: \$!'
             sleep 2
-            echo 'Log tail:'
-            tail -3 /tmp/watney4.log
+            tail -20 /tmp/watney4.log
           "
