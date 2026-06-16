@@ -45,6 +45,9 @@ jobs:
           git remote set-url origin http://git:${{ secrets.GITHUB_TOKEN }}@100.114.88.76:30000/hawk0120/watney4.git
           git push origin main --tags
 
+      - name: Run tests
+        run: ./gradlew test
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
@@ -81,3 +84,12 @@ jobs:
             sleep 2
             tail -20 /tmp/watney4.log
           "
+
+      - name: Notify Discord on failure
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+            -d '{
+              "content": "🚨 **Deploy failed!**\nRepo: `hawk0120/watney4`\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }' \
+            ${{ secrets.DISCORD_WEBHOOK }}
