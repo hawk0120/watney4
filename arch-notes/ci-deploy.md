@@ -8,9 +8,10 @@ Runs on Forgejo Actions (self-hosted at `100.114.88.76:30000`). Workflow lives i
 
 **Steps:**
 
-1. **Setup SSH** — loads `DEPLOY_SSH_KEY` secret into `~/.ssh/id_ed25519`, fingerprints `DEPLOY_HOST` into `known_hosts`
-2. **Deploy & build** — SSHs into bitnest5 as `hawk0120`, `cd`s to `/home/hawk0120/dev/kotlin/watney4`, runs `git pull origin main && ./gradlew build`
-3. **Restart bot** — `pkill` any existing `core.MainKt` or `watney4` process, then `nohup ./gradlew run > /tmp/watney4.log 2>&1 &`
+1. **Bump version and tag** — finds the latest `v*` tag, increments the patch version (e.g. `v1.0.1` → `v1.0.2`), updates `version` in `build.gradle.kts`, commits with `[skip ci]`, tags, and pushes back via `GITHUB_TOKEN`. First deploy starts at `v1.0.1`.
+2. **Setup SSH** — loads `DEPLOY_SSH_KEY` secret into `~/.ssh/id_ed25519`, fingerprints `DEPLOY_HOST` into `known_hosts`
+3. **Deploy & build** — SSHs into bitnest5 as `hawk0120`, `cd`s to `/home/hawk0120/dev/kotlin/watney4`, runs `git pull origin main && ./gradlew build`
+4. **Restart bot** — `pkill` any existing `core.MainKt` or `watney4` process, then `nohup ./gradlew run > /tmp/watney4.log 2>&1 &`
 
 ## Secrets
 
@@ -20,6 +21,7 @@ Set in Forgejo repo → Settings → Actions → Secrets:
 |---|---|
 | `DEPLOY_SSH_KEY` | SSH private key that can SSH into bitnest5 as `hawk0120` |
 | `DEPLOY_HOST` | Hostname/IP of bitnest5 reachable from the Forgejo runner |
+| `GITHUB_TOKEN` | Auto-provided by Forgejo Actions; used for pushing the version bump commit and tag back to the repo |
 
 ## Runner
 

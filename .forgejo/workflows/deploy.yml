@@ -10,6 +10,40 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Bump version and tag
+        run: |
+          git config user.name "deploy-bot"
+          git config user.email "deploy-bot@bitnest"
+
+          git fetch --tags
+
+          latest_tag=$(git tag -l 'v*' --sort=-v:refname | head -1)
+          if [ -z "$latest_tag" ]; then
+            major=1; minor=0; patch=1
+          else
+            version="${latest_tag#v}"
+            major=$(echo "$version" | cut -d. -f1)
+            minor=$(echo "$version" | cut -d. -f2)
+            patch=$(echo "$version" | cut -d. -f3)
+            patch=$((patch + 1))
+          fi
+          new_version="${major}.${minor}.${patch}"
+          new_tag="v${new_version}"
+
+          echo "New version: ${new_version} (tag: ${new_tag})"
+
+          sed -i 's/version = ".*"/version = "'"${new_version}"'"/' build.gradle.kts
+
+          git add build.gradle.kts
+          git commit -m "Bump version to ${new_version} [skip ci]"
+
+          git tag "${new_tag}"
+
+          git remote set-url origin http://git:${{ secrets.GITHUB_TOKEN }}@100.114.88.76:30000/hawk0120/watney4.git
+          git push origin main --tags
 
       - name: Setup SSH
         run: |
