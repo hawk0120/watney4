@@ -14,7 +14,10 @@ data class AppConfig(
     val discordToken: String,
     val memoryDbPath: String,
     val consolidationTimezone: String,
-    val consolidationHour: Int
+    val consolidationHour: Int,
+    val openrouterApiKey: String,
+    val openrouterModel: String,
+    val openrouterBaseUrl: String
 ) {
     companion object {
         fun load(): AppConfig {
@@ -36,7 +39,10 @@ data class AppConfig(
                     ?: error("discord.token is required in application.properties"),
                 memoryDbPath = props.getProperty("memory.db-path", "watney4.db"),
                 consolidationTimezone = props.getProperty("consolidation.timezone", "Europe/Berlin"),
-                consolidationHour = props.getProperty("consolidation.hour", "3").toInt()
+                consolidationHour = props.getProperty("consolidation.hour", "3").toInt(),
+                openrouterApiKey = props.getProperty("openrouter.api-key", ""),
+                openrouterModel = props.getProperty("openrouter.model", "google/gemma-4-26b-a4b-it:free"),
+                openrouterBaseUrl = props.getProperty("openrouter.base-url", "https://openrouter.ai/api/v1/chat/completions")
             )
         }
 
@@ -60,7 +66,13 @@ data class AppConfig(
                 model = config.llamaModel,
                 logLevel = config.logLevel
             )
-            else -> error("Unknown provider: ${config.provider}. Use 'mistral' or 'llamacpp'.")
+            "openrouter" -> OpenRouterProvider(
+                apiKey = config.openrouterApiKey,
+                model = config.openrouterModel,
+                baseUrl = config.openrouterBaseUrl,
+                logLevel = config.logLevel
+            )
+            else -> error("Unknown provider: ${config.provider}. Use 'mistral', 'llamacpp', or 'openrouter'.")
         }
     }
 }

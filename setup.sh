@@ -48,6 +48,9 @@ mistral.model=ministral-8b-2512
 mistral.base-url=https://api.mistral.ai/v1/chat/completions
 llama.base-url=http://127.0.0.1:8080/completion
 llama.model=gemma4:e2b
+openrouter.api-key=<your-openrouter-api-key>
+openrouter.model=google/gemma-4-26b-a4b-it:free
+openrouter.base-url=https://openrouter.ai/api/v1/chat/completions
 discord.token=<your-discord-bot-token>
 memory.db-path=watney4.db
 CFG

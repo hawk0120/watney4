@@ -16,7 +16,7 @@ class ConfigTest {
     @Test
     fun `AppConfig data class stores fields correctly`() {
         val config = AppConfig(
-            provider = "mistral",
+            provider = "openrouter",
             logLevel = LogLevel.DEBUG,
             mistralApiKey = "test-key",
             mistralModel = "test-model",
@@ -26,9 +26,12 @@ class ConfigTest {
             discordToken = "discord-test",
             memoryDbPath = ":memory:",
             consolidationTimezone = "America/New_York",
-            consolidationHour = 4
+            consolidationHour = 4,
+            openrouterApiKey = "or-test-key",
+            openrouterModel = "google/gemma-4-26b-a4b-it:free",
+            openrouterBaseUrl = "https://openrouter.ai/api/v1/chat/completions"
         )
-        assertEquals("mistral", config.provider)
+        assertEquals("openrouter", config.provider)
         assertEquals(LogLevel.DEBUG, config.logLevel)
         assertEquals("test-key", config.mistralApiKey)
         assertEquals("test-model", config.mistralModel)
@@ -39,6 +42,9 @@ class ConfigTest {
         assertEquals(":memory:", config.memoryDbPath)
         assertEquals("America/New_York", config.consolidationTimezone)
         assertEquals(4, config.consolidationHour)
+        assertEquals("or-test-key", config.openrouterApiKey)
+        assertEquals("google/gemma-4-26b-a4b-it:free", config.openrouterModel)
+        assertEquals("https://openrouter.ai/api/v1/chat/completions", config.openrouterBaseUrl)
     }
 
     @Test
@@ -54,7 +60,10 @@ class ConfigTest {
             discordToken = "token",
             memoryDbPath = "watney4.db",
             consolidationTimezone = "Europe/Berlin",
-            consolidationHour = 3
+            consolidationHour = 3,
+            openrouterApiKey = "",
+            openrouterModel = "google/gemma-4-26b-a4b-it:free",
+            openrouterBaseUrl = "https://openrouter.ai/api/v1/chat/completions"
         )
         assertEquals("ministral-8b-2512", config.mistralModel)
         assertEquals("https://api.mistral.ai/v1/chat/completions", config.mistralBaseUrl)
@@ -63,5 +72,8 @@ class ConfigTest {
         assertEquals("watney4.db", config.memoryDbPath)
         assertEquals("Europe/Berlin", config.consolidationTimezone)
         assertEquals(3, config.consolidationHour)
+        assertEquals("", config.openrouterApiKey)
+        assertEquals("google/gemma-4-26b-a4b-it:free", config.openrouterModel)
+        assertEquals("https://openrouter.ai/api/v1/chat/completions", config.openrouterBaseUrl)
     }
 }

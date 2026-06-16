@@ -26,8 +26,18 @@ interface LLMProvider {
 - Concatenates messages into a single prompt string (no tool-call support)
 - Parses tool calls from the response text using regex
 
+## OpenRouterProvider (`utils/OpenRouterProvider.kt`)
+
+- Sends a chat completion request to the OpenRouter API (OpenAI-compatible)
+- Uses the same message/tool format as Mistral (OpenAI-compatible)
+- Configurable base URL, model, and API key
+- Default model: `google/gemma-4-26b-a4b-it:free`
+- Sends `HTTP-Referer` and `X-Title` headers for OpenRouter rankings
+- Full tool-call support (for models that support it)
+
 ## Selection
 
 `AppConfig.createProvider()` in `Config.kt` chooses based on `app.provider`:
 - `"mistral"` → MistralProvider
 - `"llamacpp"` → LlamaCppProvider
+- `"openrouter"` → OpenRouterProvider
