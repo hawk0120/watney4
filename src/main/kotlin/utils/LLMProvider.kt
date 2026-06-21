@@ -25,5 +25,6 @@ sealed class LLMResult {
 interface LLMProvider {
     val modelName: String
     suspend fun query(messages: List<ChatMessage>, tools: List<Map<String, Any>>? = null): LLMResult
+    suspend fun embed(text: String, model: String? = null): FloatArray
     suspend fun isAvailable(): Boolean
 }

@@ -29,7 +29,7 @@ class Watney4Test {
     fun `whoAmI mentions all tools`() {
         val result = watney.whoAmI()
         val tools = listOf("read", "write", "bash", "glob", "grep", "web_search", "web_fetch",
-            "cron", "memory_search", "save_memory", "forget_memory", "opencode",
+            "cron", "memory_search", "semantic_search", "opencode",
             "context_truncate", "context_inject", "context_status", "system_status")
         for (tool in tools) {
             assertTrue(result.contains(tool), "whoAmI should mention tool: $tool")

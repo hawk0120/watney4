@@ -28,8 +28,11 @@ class ConfigTest {
             consolidationTimezone = "America/New_York",
             consolidationHour = 4,
             openrouterApiKey = "or-test-key",
-            openrouterModel = "google/gemma-4-26b-a4b-it:free",
-            openrouterBaseUrl = "https://openrouter.ai/api/v1/chat/completions"
+            openrouterModel = "google/gemma-4-31b-it:free",
+            openrouterBaseUrl = "https://openrouter.ai/api/v1/chat/completions",
+            embeddingProvider = "mistral",
+            embeddingModel = "mistral-embed",
+            embeddingBaseUrl = null
         )
         assertEquals("openrouter", config.provider)
         assertEquals(LogLevel.DEBUG, config.logLevel)
@@ -43,8 +46,11 @@ class ConfigTest {
         assertEquals("America/New_York", config.consolidationTimezone)
         assertEquals(4, config.consolidationHour)
         assertEquals("or-test-key", config.openrouterApiKey)
-        assertEquals("google/gemma-4-26b-a4b-it:free", config.openrouterModel)
+        assertEquals("google/gemma-4-31b-it:free", config.openrouterModel)
         assertEquals("https://openrouter.ai/api/v1/chat/completions", config.openrouterBaseUrl)
+        assertEquals("mistral", config.embeddingProvider)
+        assertEquals("mistral-embed", config.embeddingModel)
+        assertEquals(null, config.embeddingBaseUrl)
     }
 
     @Test
@@ -62,8 +68,11 @@ class ConfigTest {
             consolidationTimezone = "Europe/Berlin",
             consolidationHour = 3,
             openrouterApiKey = "",
-            openrouterModel = "google/gemma-4-26b-a4b-it:free",
-            openrouterBaseUrl = "https://openrouter.ai/api/v1/chat/completions"
+            openrouterModel = "google/gemma-4-31b-it:free",
+            openrouterBaseUrl = "https://openrouter.ai/api/v1/chat/completions",
+            embeddingProvider = "mistral",
+            embeddingModel = "mistral-embed",
+            embeddingBaseUrl = null
         )
         assertEquals("ministral-8b-2512", config.mistralModel)
         assertEquals("https://api.mistral.ai/v1/chat/completions", config.mistralBaseUrl)
@@ -73,7 +82,10 @@ class ConfigTest {
         assertEquals("Europe/Berlin", config.consolidationTimezone)
         assertEquals(3, config.consolidationHour)
         assertEquals("", config.openrouterApiKey)
-        assertEquals("google/gemma-4-26b-a4b-it:free", config.openrouterModel)
+        assertEquals("google/gemma-4-31b-it:free", config.openrouterModel)
         assertEquals("https://openrouter.ai/api/v1/chat/completions", config.openrouterBaseUrl)
+        assertEquals("mistral", config.embeddingProvider)
+        assertEquals("mistral-embed", config.embeddingModel)
+        assertEquals(null, config.embeddingBaseUrl)
     }
 }

@@ -16,6 +16,7 @@ import utils.LLMProvider
 import utils.LLMResult
 import utils.LogLevel
 import utils.Logger
+import utils.LTMemoryManager
 import utils.MemoryStore
 import tools.ToolCall
 import tools.ToolRegistry
@@ -28,6 +29,7 @@ class Agent(
     private val persona: Watney4 = Watney4(),
     private val logLevel: LogLevel = LogLevel.INFO,
     private val memory: MemoryStore? = null,
+    private val ltmManager: LTMemoryManager? = null,
     private val scope: CoroutineScope,
     private val consolidationTimezone: String = "Europe/Berlin",
     private val consolidationHour: Int = 3
@@ -50,23 +52,19 @@ class Agent(
             log.info("Agent loop started — no tools registered")
         }
 
-        memory?.let {
-            val history = it.loadRecentMessages(50)
+        memory?.let { ms ->
+            val history = ms.loadRecentMessages(50)
             if (history.isNotEmpty()) {
                 messages.addAll(history)
                 log.info("Loaded ${history.size} messages from history")
             }
-            val allMemories = it.loadMemories()
-            val autoPrefixes = listOf("Conversation ", "fact:")
-            val autoMemories = allMemories.filter { m -> autoPrefixes.any { p -> m.key.startsWith(p) } }
-            if (autoMemories.isNotEmpty()) {
-                log.info("Found ${autoMemories.size} auto-generated memories in DB (not loaded into context)")
-            }
-            val regularMemories = allMemories.filter { m -> autoPrefixes.none { p -> m.key.startsWith(p) } }
-            if (regularMemories.isNotEmpty()) {
-                val memoryText = regularMemories.joinToString("\n") { "- ${it.key}: ${it.content}" }
-                messages.add(ChatMessage("system", "Here's what I remember about you:\n$memoryText"))
-                log.info("Loaded ${regularMemories.size} memories into context (${allMemories.size} total in DB)")
+        }
+
+        ltmManager?.let {
+            val currentWeekLTM = runCatching { it.loadCurrentWeekMemories() }.getOrDefault("")
+            if (currentWeekLTM.isNotBlank()) {
+                messages.add(ChatMessage("system", "[Long-term memory for this week]\n$currentWeekLTM"))
+                log.info("Loaded current week LTM into context")
             }
         }
 
@@ -99,7 +97,7 @@ class Agent(
                 msg.replyTo.sendMessage("Context cleared. Removed $count messages, system prompt preserved.")
 
                 if (count > 0 && memory != null) {
-                    scope.launch { consolidate(nonSystemMessages, saveFacts = true) }
+                    scope.launch { consolidate(nonSystemMessages) }
                 }
 
                 continue
@@ -179,8 +177,7 @@ class Agent(
                 "web_fetch" -> (call.arguments["url"] as? String)?.let { "`$it`" } ?: "running..."
                 "cron" -> (call.arguments["action"] as? String)?.let { it } ?: "running..."
                 "memory_search" -> (call.arguments["query"] as? String)?.let { it.take(80) } ?: "running..."
-                "save_memory" -> (call.arguments["key"] as? String)?.let { "key=$it" } ?: "running..."
-                "forget_memory" -> (call.arguments["key"] as? String)?.let { "key=$it" } ?: "running..."
+                "semantic_search" -> (call.arguments["query"] as? String)?.let { it.take(80) } ?: "running..."
                 "opencode" -> (call.arguments["task"] as? String)?.let { it.take(120) } ?: "running..."
                 "context_truncate" -> (call.arguments["keepLast"] as? Double)?.toInt()?.let { "keep last $it" } ?: "running..."
                 "context_inject" -> (call.arguments["role"] as? String)?.let { "role=$it" } ?: "running..."
@@ -223,7 +220,7 @@ class Agent(
         }
     }
 
-    private suspend fun consolidate(nonSystemMessages: List<ChatMessage>, saveFacts: Boolean) {
+    private suspend fun consolidate(nonSystemMessages: List<ChatMessage>) {
         withContext(Dispatchers.IO) {
             val conversationText = buildString {
                 for (m in nonSystemMessages) {
@@ -243,34 +240,13 @@ class Agent(
                 }
             }.take(12000)
 
-            val ts = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-
             val summaryResult = llm.query(listOf(
                 ChatMessage("system", "You are a conversation summarizer. Summarize the key topics, claims, decisions, preferences, and important information from the following conversation with the user. Be concise but comprehensive. Focus on factual information that would be useful to remember long-term. Do not use any tools."),
                 ChatMessage("user", "Summarize this conversation:\n\n$conversationText")
             ))
             if (summaryResult is LLMResult.Success) {
-                memory?.saveMemory("Conversation $ts", summaryResult.response)
-                log.info("Saved conversation summary to long-term memory")
-            }
-
-            if (saveFacts) {
-                val factResult = llm.query(listOf(
-                    ChatMessage("system", "Extract durable factual claims, preferences, decisions, and personal information about the user from this conversation. Return each as a separate line in format: KEY: VALUE. Keys should be short, descriptive, and reusable. Skip transient/tool-related content. Do not use any tools."),
-                    ChatMessage("user", "Extract facts from:\n\n$conversationText")
-                ))
-                if (factResult is LLMResult.Success) {
-                    val facts = factResult.response.lines().mapNotNull { line ->
-                        val match = Regex("^([A-Za-z_ ]+): (.+)$").find(line.trim())
-                        match?.let { it.groupValues[1].trim() to it.groupValues[2].trim() }
-                    }
-                    for ((key, value) in facts) {
-                        memory?.saveMemory("fact:$key", value)
-                    }
-                    if (facts.isNotEmpty()) {
-                        log.info("Saved ${facts.size} facts to long-term memory")
-                    }
-                }
+                memory?.saveMessage("assistant", "[Consolidation] ${summaryResult.response}")
+                log.info("Saved conversation summary to message history")
             }
         }
     }
@@ -288,10 +264,19 @@ class Agent(
                 log.info("Next daily consolidation scheduled at $nextRun (${delayMs / 60000} minutes away)")
                 delay(delayMs)
 
+                ltmManager?.let {
+                    val currentWeek = it.getCurrentWeekStart()
+                    val weeks = memory?.getDistinctWeeks().orEmpty()
+                    if (weeks.any { w -> w != currentWeek }) {
+                        log.info("Week rollover detected — rotating LTM")
+                        it.rotateWeek()
+                    }
+                }
+
                 val nonSystemMessages = messages.filter { it.role != "system" }
                 if (nonSystemMessages.isNotEmpty() && memory != null) {
                     log.info("Running daily consolidation — ${nonSystemMessages.size} messages to archive")
-                    consolidate(nonSystemMessages, saveFacts = false)
+                    consolidate(nonSystemMessages)
                     messages.removeAll { it.role != "system" }
                     log.info("Daily consolidation complete — removed ${nonSystemMessages.size} messages from context")
                 }

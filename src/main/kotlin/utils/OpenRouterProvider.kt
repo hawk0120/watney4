@@ -63,11 +63,29 @@ data class OpenRouterErrorResponse(
     val error: OpenRouterError? = null
 )
 
+data class OpenRouterEmbeddingRequest(
+    val model: String,
+    val input: String
+)
+
+data class OpenRouterEmbeddingData(
+    val embedding: List<Double>,
+    val index: Int = 0
+)
+
+data class OpenRouterEmbeddingResponse(
+    val data: List<OpenRouterEmbeddingData>,
+    val model: String? = null,
+    val usage: Map<String, Int>? = null
+)
+
 class OpenRouterProvider(
     private val apiKey: String,
-    private val model: String = "google/gemma-4-26b-a4b-it:free",
+    private val model: String = "google/gemma-4-31b-it:free",
     private val baseUrl: String = "https://openrouter.ai/api/v1/chat/completions",
-    private val logLevel: LogLevel = LogLevel.INFO
+    private val logLevel: LogLevel = LogLevel.INFO,
+    private val embeddingModel: String = "openai/text-embedding-3-small",
+    private val embeddingBaseUrl: String = "https://openrouter.ai/api/v1/embeddings"
 ) : LLMProvider {
     override val modelName: String get() = "openrouter:$model"
     private val log = Logger.getLogger("OpenRouterProvider", logLevel)
@@ -169,6 +187,47 @@ class OpenRouterProvider(
             val elapsed = java.time.Duration.between(start, Instant.now()).toMillis()
             log.error("Query failed after ${elapsed}ms: ${e.message}")
             LLMResult.Error("OpenRouter API query failed: ${e.message}")
+        }
+    }
+
+    override suspend fun embed(text: String, model: String?): FloatArray = withContext(Dispatchers.IO) {
+        val embedModel = model ?: embeddingModel
+        log.debug("Embedding text=${text.take(80)}... with model=$embedModel")
+
+        try {
+            val request = OpenRouterEmbeddingRequest(model = embedModel, input = text)
+            val body = gson.toJson(request)
+
+            val connection = URI(embeddingBaseUrl).toURL().openConnection() as HttpURLConnection
+            connection.requestMethod = "POST"
+            connection.setRequestProperty("Content-Type", "application/json")
+            connection.setRequestProperty("Authorization", "Bearer $apiKey")
+            connection.setRequestProperty("HTTP-Referer", "https://github.com/bhawkins93/watney4")
+            connection.setRequestProperty("X-Title", "Watney4")
+            connection.doOutput = true
+            connection.outputStream.bufferedWriter().use { it.write(body) }
+
+            val rawJson = connection.inputStream.bufferedReader().use { it.readText() }
+
+            if (connection.responseCode != 200) {
+                val errorResponse = try {
+                    gson.fromJson(rawJson, OpenRouterErrorResponse::class.java)
+                } catch (_: Exception) { null }
+                val errorMsg = errorResponse?.error?.message ?: rawJson.take(200)
+                log.error("Embedding API error (${connection.responseCode}): $errorMsg")
+                throw RuntimeException("OpenRouter embedding error ${connection.responseCode}: $errorMsg")
+            }
+
+            val parsed = gson.fromJson(rawJson, OpenRouterEmbeddingResponse::class.java)
+            val embedding = parsed.data.firstOrNull()?.embedding
+                ?: throw RuntimeException("No embedding data in response")
+
+            val floatArray = FloatArray(embedding.size) { embedding[it].toFloat() }
+            log.debug("Embedding OK — ${floatArray.size} dimensions")
+            floatArray
+        } catch (e: Exception) {
+            log.error("Embedding failed: ${e.message}")
+            throw e
         }
     }
 

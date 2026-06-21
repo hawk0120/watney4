@@ -3,8 +3,6 @@ package utils
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -78,56 +76,8 @@ class MemoryStoreTest {
     }
 
     @Test
-    fun `save and load memories`() {
-        store.saveMemory("user_name", "Brady")
-        store.saveMemory("favorite_color", "blue")
-
-        val memories = store.loadMemories()
-        assertEquals(2, memories.size)
-
-        val name = memories.find { it.key == "user_name" }
-        assertNotNull(name)
-        assertEquals("Brady", name!!.content)
-    }
-
-    @Test
-    fun `saveMemory upserts on duplicate key`() {
-        store.saveMemory("key1", "original")
-        store.saveMemory("key1", "updated")
-
-        val memories = store.loadMemories()
-        assertEquals(1, memories.count { it.key == "key1" })
-        assertEquals("updated", memories.find { it.key == "key1" }?.content)
-    }
-
-    @Test
-    fun `deleteMemory returns true and removes entry`() {
-        store.saveMemory("temp", "to delete")
-        val deleted = store.deleteMemory("temp")
-        assertTrue(deleted)
-        assertTrue(store.loadMemories().isEmpty())
-    }
-
-    @Test
-    fun `deleteMemory returns false for non-existent key`() {
-        val deleted = store.deleteMemory("does_not_exist")
-        assertFalse(deleted)
-    }
-
-    @Test
-    fun `loadMemories returns all memories`() {
-        store.saveMemory("a", "first")
-        store.saveMemory("b", "second")
-
-        val memories = store.loadMemories()
-        assertEquals(2, memories.size)
-        assertEquals(setOf("a", "b"), memories.map { it.key }.toSet())
-    }
-
-    @Test
     fun `empty store returns empty results`() {
         assertTrue(store.loadRecentMessages(10).isEmpty())
-        assertTrue(store.loadMemories().isEmpty())
         assertEquals("No messages matching 'x' found", store.searchMessages("x"))
     }
 
@@ -142,9 +92,126 @@ class MemoryStoreTest {
         val store2 = MemoryStore(":memory:")
         store2.init()
 
-        store.saveMemory("only_in_first", "value")
-        assertTrue(store2.loadMemories().isEmpty())
+        store.saveMessage("user", "only_in_first")
+        assertTrue(store2.loadRecentMessages(10).isEmpty())
 
         store2.close()
+    }
+
+    @Test
+    fun `save and load LTM entries`() {
+        val id1 = store.saveLTMEntry("2026-06-15", "Session summary one", """{"type": "daily"}""")
+        val id2 = store.saveLTMEntry("2026-06-15", "Session summary two")
+
+        assertTrue(id1 > 0)
+        assertTrue(id2 > 0)
+
+        val entries = store.getLTMEntries("2026-06-15")
+        assertEquals(2, entries.size)
+        assertEquals("Session summary one", entries[0].content)
+        assertEquals("Session summary two", entries[1].content)
+    }
+
+    @Test
+    fun `LTM entries filtered by week`() {
+        store.saveLTMEntry("2026-06-08", "Old week")
+        store.saveLTMEntry("2026-06-15", "Current week")
+
+        val current = store.getLTMEntries("2026-06-15")
+        assertEquals(1, current.size)
+        assertEquals("Current week", current[0].content)
+    }
+
+    @Test
+    fun `getDistinctWeeks returns all weeks`() {
+        store.saveLTMEntry("2026-06-01", "a")
+        store.saveLTMEntry("2026-06-08", "b")
+        store.saveLTMEntry("2026-06-15", "c")
+
+        val weeks = store.getDistinctWeeks()
+        assertEquals(3, weeks.size)
+    }
+
+    @Test
+    fun `deleteLTMEntries removes entries for a week`() {
+        store.saveLTMEntry("2026-06-08", "to delete")
+        store.deleteLTMEntries("2026-06-08")
+
+        assertTrue(store.getLTMEntries("2026-06-08").isEmpty())
+    }
+
+    @Test
+    fun `save and load LTM summaries`() {
+        val entryId = store.saveLTMEntry("2026-06-15", "Main content")
+
+        val s1 = store.saveLTMSummary(entryId, "factual", "Factual summary")
+        val s2 = store.saveLTMSummary(entryId, "preferences", "Pref summary")
+
+        assertTrue(s1 > 0)
+        assertTrue(s2 > 0)
+
+        val summaries = store.getLTMSummaries(entryId)
+        assertEquals(2, summaries.size)
+        assertEquals("factual" to "Factual summary", summaries[0])
+        assertEquals("preferences" to "Pref summary", summaries[1])
+    }
+
+    @Test
+    fun `save and load archive entries`() {
+        val bytes = MemoryStore.embeddingToBytes(floatArrayOf(0.1f, 0.2f, 0.3f))
+
+        val id = store.saveToArchive(
+            originalEntryId = 1L,
+            weekStart = "2026-06-08",
+            content = "Archived memory",
+            perspective = "factual",
+            semanticTags = "test, example",
+            embedding = bytes,
+            metadata = """{"source": "test"}"""
+        )
+
+        assertTrue(id > 0)
+
+        val loaded = store.loadArchiveWithEmbeddings()
+        assertEquals(1, loaded.size)
+        assertEquals("Archived memory", loaded[0].third)
+        assertEquals(3, MemoryStore.bytesToEmbedding(loaded[0].second).size)
+    }
+
+    @Test
+    fun `embedding byte conversion roundtrip`() {
+        val original = floatArrayOf(0.1f, -0.5f, 0.8f, 1.0f, -0.0f)
+        val bytes = MemoryStore.embeddingToBytes(original)
+        val restored = MemoryStore.bytesToEmbedding(bytes)
+
+        assertEquals(original.size, restored.size)
+        for (i in original.indices) {
+            assertEquals(original[i], restored[i], 1e-6f)
+        }
+    }
+
+    @Test
+    fun `getArchiveEntry returns full entry`() {
+        val bytes = MemoryStore.embeddingToBytes(floatArrayOf(0.5f))
+        val id = store.saveToArchive(
+            originalEntryId = null,
+            weekStart = "2026-06-01",
+            content = "test content",
+            perspective = "goals",
+            semanticTags = "goal, target",
+            embedding = bytes
+        )
+
+        val entry = store.getArchiveEntry(id)
+        assertTrue(entry != null)
+        assertEquals("goals", entry!!.perspective)
+        assertEquals("goal, target", entry.semanticTags)
+        assertEquals("test content", entry.content)
+        assertEquals("2026-06-01", entry.weekStart)
+    }
+
+    @Test
+    fun `empty archive returns empty list`() {
+        assertTrue(store.loadArchiveWithEmbeddings().isEmpty())
     }
 }

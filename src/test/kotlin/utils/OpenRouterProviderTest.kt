@@ -50,13 +50,13 @@ class OpenRouterProviderTest {
             OpenRouterMessage(role = "assistant", content = "Hi there")
         )
         val request = OpenRouterRequest(
-            model = "google/gemma-4-26b-a4b-it:free",
+            model = "google/gemma-4-31b-it:free",
             messages = messages,
             tools = null,
             stream = false
         )
         val json = gson.toJson(request)
-        assertTrue(json.contains("google/gemma-4-26b-a4b-it:free"))
+        assertTrue(json.contains("google/gemma-4-31b-it:free"))
         assertTrue(json.contains("Hello"))
         assertTrue(json.contains("Hi there"))
         assertTrue(json.contains("\"stream\":false"))
@@ -76,7 +76,7 @@ class OpenRouterProviderTest {
             )
         )
         val request = OpenRouterRequest(
-            model = "google/gemma-4-26b-a4b-it:free",
+            model = "google/gemma-4-31b-it:free",
             messages = messages,
             tools = tools,
             stream = false
@@ -184,7 +184,7 @@ class OpenRouterProviderTest {
     @Test
     fun `OpenRouterProvider model name format`() {
         val provider = OpenRouterProvider(apiKey = "test-key")
-        assertEquals("openrouter:google/gemma-4-26b-a4b-it:free", provider.modelName)
+        assertEquals("openrouter:google/gemma-4-31b-it:free", provider.modelName)
     }
 
     @Test
@@ -211,12 +211,15 @@ class OpenRouterProviderTest {
             consolidationTimezone = "UTC",
             consolidationHour = 3,
             openrouterApiKey = "or-key",
-            openrouterModel = "google/gemma-4-26b-a4b-it:free",
-            openrouterBaseUrl = "https://openrouter.ai/api/v1/chat/completions"
+            openrouterModel = "google/gemma-4-31b-it:free",
+            openrouterBaseUrl = "https://openrouter.ai/api/v1/chat/completions",
+            embeddingProvider = "mistral",
+            embeddingModel = "mistral-embed",
+            embeddingBaseUrl = null
         )
         val provider = AppConfig.createProvider(config)
         assertTrue(provider is OpenRouterProvider)
-        assertEquals("openrouter:google/gemma-4-26b-a4b-it:free", provider.modelName)
+        assertEquals("openrouter:google/gemma-4-31b-it:free", provider.modelName)
     }
 
     @Test

@@ -64,11 +64,29 @@ data class MistralErrorResponse(
     val error: MistralError? = null
 )
 
+data class MistralEmbeddingRequest(
+    val model: String,
+    val input: String
+)
+
+data class MistralEmbeddingData(
+    val embedding: List<Double>,
+    val index: Int = 0
+)
+
+data class MistralEmbeddingResponse(
+    val data: List<MistralEmbeddingData>,
+    val model: String? = null,
+    val usage: Map<String, Int>? = null
+)
+
 class MistralProvider(
     private val apiKey: String,
     private val model: String = "ministral-8b-2512",
     private val baseUrl: String = "https://api.mistral.ai/v1/chat/completions",
-    private val logLevel: LogLevel = LogLevel.INFO
+    private val logLevel: LogLevel = LogLevel.INFO,
+    private val embeddingModel: String = "mistral-embed",
+    private val embeddingBaseUrl: String = "https://api.mistral.ai/v1/embeddings"
 ) : LLMProvider {
     override val modelName: String get() = model
     private val log = Logger.getLogger("MistralProvider", logLevel)
@@ -167,6 +185,45 @@ class MistralProvider(
             val elapsed = java.time.Duration.between(start, Instant.now()).toMillis()
             log.error("Query failed after ${elapsed}ms: ${e.message}")
             LLMResult.Error("Mistral API query failed: ${e.message}")
+        }
+    }
+
+    override suspend fun embed(text: String, model: String?): FloatArray = withContext(Dispatchers.IO) {
+        val embedModel = model ?: embeddingModel
+        log.debug("Embedding text=${text.take(80)}... with model=$embedModel")
+
+        try {
+            val request = MistralEmbeddingRequest(model = embedModel, input = text)
+            val body = gson.toJson(request)
+
+            val connection = URI(embeddingBaseUrl).toURL().openConnection() as HttpURLConnection
+            connection.requestMethod = "POST"
+            connection.setRequestProperty("Content-Type", "application/json")
+            connection.setRequestProperty("Authorization", "Bearer $apiKey")
+            connection.doOutput = true
+            connection.outputStream.bufferedWriter().use { it.write(body) }
+
+            val rawJson = connection.inputStream.bufferedReader().use { it.readText() }
+
+            if (connection.responseCode != 200) {
+                val errorResponse = try {
+                    gson.fromJson(rawJson, MistralErrorResponse::class.java)
+                } catch (_: Exception) { null }
+                val errorMsg = errorResponse?.error?.message ?: rawJson.take(200)
+                log.error("Embedding API error (${connection.responseCode}): $errorMsg")
+                throw RuntimeException("Mistral embedding error ${connection.responseCode}: $errorMsg")
+            }
+
+            val parsed = gson.fromJson(rawJson, MistralEmbeddingResponse::class.java)
+            val embedding = parsed.data.firstOrNull()?.embedding
+                ?: throw RuntimeException("No embedding data in response")
+
+            val floatArray = FloatArray(embedding.size) { embedding[it].toFloat() }
+            log.debug("Embedding OK — ${floatArray.size} dimensions")
+            floatArray
+        } catch (e: Exception) {
+            log.error("Embedding failed: ${e.message}")
+            throw e
         }
     }
 

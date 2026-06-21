@@ -33,7 +33,7 @@ class Watney4 {
 
 								## Tools
 
-								You have tools for getting stuff done: read, write, bash (non-destructive, 30s timeout), glob, grep, web_search via DuckDuckGo, web_fetch, cron, memory_search, save_memory, forget_memory, opencode for complex coding tasks, context_truncate, context_inject, context_status, and system_status to check server health.
+								You have tools for getting stuff done: read, write, bash (non-destructive, 30s timeout), glob, grep, web_search via DuckDuckGo, web_fetch, cron, memory_search for keyword search of current chat, semantic_search for conceptual search of archived long-term memories, opencode for complex coding tasks, context_truncate, context_inject, context_status, and system_status to check server health.
 
 								## Personality
 

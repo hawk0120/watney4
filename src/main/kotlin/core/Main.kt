@@ -12,20 +12,20 @@ import tools.ContextStatusTool
 import tools.ContextTruncateTool
 import tools.SystemStatusTool
 import tools.CronTool
-import tools.ForgetMemoryTool
 import tools.GlobTool
 import tools.GrepTool
 import tools.MemorySearchTool
 import tools.OpencodeTool
 import tools.ReadTool
 import tools.RemindTool
-import tools.SaveMemoryTool
+import tools.SemanticSearchTool
 import tools.ToolRegistry
 import tools.WebFetchTool
 import tools.WebSearchTool
 import tools.WriteTool
 import utils.CronScheduler
 import utils.Context
+import utils.LTMemoryManager
 import utils.Logger
 import utils.MemoryStore
 import utils.ReminderScheduler
@@ -64,6 +64,9 @@ fun main() = runBlocking {
 
     val ctx = Context()
 
+    val embeddingProvider = AppConfig.createEmbeddingProvider(config)
+    val ltmManager = LTMemoryManager(memory, embeddingProvider)
+
     val tools = ToolRegistry(listOf(
         ReadTool(),
         WriteTool(),
@@ -76,8 +79,7 @@ fun main() = runBlocking {
         CronTool(cronScheduler),
         RemindTool(reminderScheduler),
         MemorySearchTool(memory),
-        SaveMemoryTool(memory),
-        ForgetMemoryTool(memory),
+        SemanticSearchTool(ltmManager),
         ContextTruncateTool(ctx),
         ContextInjectTool(ctx),
         ContextStatusTool(ctx),
@@ -91,6 +93,7 @@ fun main() = runBlocking {
         ctx = ctx,
         logLevel = config.logLevel,
         memory = memory,
+        ltmManager = ltmManager,
         scope = this,
         consolidationTimezone = config.consolidationTimezone,
         consolidationHour = config.consolidationHour
