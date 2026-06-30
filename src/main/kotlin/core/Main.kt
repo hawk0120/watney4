@@ -29,6 +29,7 @@ import utils.LTMemoryManager
 import utils.Logger
 import utils.MemoryStore
 import utils.ReminderScheduler
+import utils.ResearchSession
 import utils.SelfChatInterface
 import utils.VoiceChatManager
 
@@ -86,6 +87,13 @@ fun main() = runBlocking {
         SystemStatusTool()
     ))
 
+    val researchSession = ResearchSession(
+        llm = AppConfig.createProvider(config),
+        tools = tools,
+        discord = discord,
+        logLevel = config.logLevel
+    )
+
     val agent = Agent(
         inbox = inbox,
         llm = AppConfig.createProvider(config),
@@ -94,6 +102,7 @@ fun main() = runBlocking {
         logLevel = config.logLevel,
         memory = memory,
         ltmManager = ltmManager,
+        researchSession = researchSession,
         scope = this,
         consolidationTimezone = config.consolidationTimezone,
         consolidationHour = config.consolidationHour

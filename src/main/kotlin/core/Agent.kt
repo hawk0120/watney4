@@ -18,6 +18,7 @@ import utils.LogLevel
 import utils.Logger
 import utils.LTMemoryManager
 import utils.MemoryStore
+import utils.ResearchSession
 import tools.ToolCall
 import tools.ToolRegistry
 
@@ -30,6 +31,7 @@ class Agent(
     private val logLevel: LogLevel = LogLevel.INFO,
     private val memory: MemoryStore? = null,
     private val ltmManager: LTMemoryManager? = null,
+    private val researchSession: ResearchSession? = null,
     private val scope: CoroutineScope,
     private val consolidationTimezone: String = "Europe/Berlin",
     private val consolidationHour: Int = 3
@@ -86,6 +88,21 @@ class Agent(
                 log.info("Exit requested from ${msg.replyTo.label}")
                 msg.replyTo.sendMessage("Goodbye.")
                 break
+            }
+
+            if (trimmed.startsWith("/research", ignoreCase = true)) {
+                val topic = trimmed.removePrefix("/research").trim().removePrefix("\"").removeSuffix("\"")
+                if (topic.isBlank()) {
+                    msg.replyTo.sendMessage("Usage: /research <topic>")
+                    continue
+                }
+                if (researchSession != null) {
+                    log.info("Starting research from ${msg.replyTo.label}: $topic")
+                    scope.launch { researchSession.run(topic) }
+                } else {
+                    msg.replyTo.sendMessage("Research system is not configured.")
+                }
+                continue
             }
 
             if (trimmed.equals("/clear", ignoreCase = true)) {

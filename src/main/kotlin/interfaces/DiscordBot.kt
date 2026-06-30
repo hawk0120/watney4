@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.hooks.EventListener
+import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.FileUpload
@@ -58,7 +59,9 @@ class DiscordBot(
                             Commands.slash("voice", "Toggle voice mode (TTS responses)"),
                             Commands.slash("status", "Show bot status (uptime, memory, stats)"),
                             Commands.slash("join", "Join your current voice channel"),
-                            Commands.slash("leave", "Leave the voice channel")
+                            Commands.slash("leave", "Leave the voice channel"),
+                            Commands.slash("research", "Run autonomous research on a topic")
+                                .addOption(OptionType.STRING, "topic", "The topic to research", true)
                         ).queue(
                             { log.info("Slash commands registered (${it.size} commands)") },
                             { log.error("Failed to register slash commands: ${it.message}") }
@@ -155,6 +158,12 @@ class DiscordBot(
                                 } else {
                                     event.reply("I'm not in a voice channel.").setEphemeral(true).queue()
                                 }
+                            }
+                            "research" -> {
+                                val topic = event.getOption("topic")?.asString ?: "unspecified"
+                                log.info("Slash command /research from ${event.user.name}: $topic")
+                                event.reply("**Starting research:** $topic").setEphemeral(false).queue()
+                                sink.trySend(IncomingMessage("/research $topic", this@DiscordBot))
                             }
                         }
                     }
