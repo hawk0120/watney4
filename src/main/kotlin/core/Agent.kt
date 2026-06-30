@@ -20,6 +20,9 @@ import utils.LTMemoryManager
 import utils.AppConfig
 import utils.MemoryStore
 import utils.ResearchSession
+import utils.WhisperBuffer
+import utils.VaultWatcher
+import utils.ConversationWatcher
 import tools.ToolCall
 import tools.ToolRegistry
 
@@ -33,6 +36,9 @@ class Agent(
     private val memory: MemoryStore? = null,
     private val ltmManager: LTMemoryManager? = null,
     private val researchSession: ResearchSession? = null,
+    private val whisperBuffer: WhisperBuffer? = null,
+    private val vaultWatcher: VaultWatcher? = null,
+    private val conversationWatcher: ConversationWatcher? = null,
     private val config: AppConfig? = null,
     private val scope: CoroutineScope,
     private val consolidationTimezone: String = "Europe/Berlin",
@@ -73,6 +79,7 @@ class Agent(
         }
 
         scope.launch { dailyConsolidationLoop() }
+        vaultWatcher?.start(scope)
 
         while (true) {
             currentCoroutineContext().ensureActive()
@@ -172,6 +179,11 @@ class Agent(
             for (iter in 1..maxToolIterations) {
                 log.trace("Tool loop iteration $iter")
 
+                val whisper = whisperBuffer?.consume()
+                if (!whisper.isNullOrBlank()) {
+                    messages.add(ChatMessage("system", whisper))
+                }
+
                 when (val result = llm.query(messages.toList(), tools?.definitions())) {
                     is LLMResult.Success -> {
                         if (result.calls.isNullOrEmpty()) {
@@ -179,6 +191,7 @@ class Agent(
                             messages.add(ChatMessage("assistant", response))
                             memory?.saveMessage("assistant", response)
                             turnCount++
+                            conversationWatcher?.onTurn(turnCount, contextText)
                             val elapsed = System.currentTimeMillis() - turnStartTime
                             log.info("Turn $turnCount complete — ${messages.size} messages in context, ${elapsed}ms")
                             msg.replyTo.sendMessage(response)

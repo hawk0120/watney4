@@ -23,6 +23,7 @@ import tools.ToolRegistry
 import tools.WebFetchTool
 import tools.WebSearchTool
 import tools.WriteTool
+import utils.ConversationWatcher
 import utils.CronScheduler
 import utils.Context
 import utils.LTMemoryManager
@@ -31,7 +32,9 @@ import utils.MemoryStore
 import utils.ReminderScheduler
 import utils.ResearchSession
 import utils.SelfChatInterface
+import utils.VaultWatcher
 import utils.VoiceChatManager
+import utils.WhisperBuffer
 
 fun main() = runBlocking {
     val config = AppConfig.load()
@@ -87,6 +90,17 @@ fun main() = runBlocking {
         SystemStatusTool()
     ))
 
+    val whisperBuffer = WhisperBuffer(config.logLevel)
+    val vaultWatcher = VaultWatcher(
+        vaultPath = "/home/hawk0120/Documents/obsidian",
+        buffer = whisperBuffer,
+        logLevel = config.logLevel
+    )
+    val conversationWatcher = ConversationWatcher(
+        buffer = whisperBuffer,
+        logLevel = config.logLevel
+    )
+
     val researchSession = ResearchSession(
         tools = tools,
         discord = discord,
@@ -102,6 +116,9 @@ fun main() = runBlocking {
         memory = memory,
         ltmManager = ltmManager,
         researchSession = researchSession,
+        whisperBuffer = whisperBuffer,
+        vaultWatcher = vaultWatcher,
+        conversationWatcher = conversationWatcher,
         config = config,
         scope = this,
         consolidationTimezone = config.consolidationTimezone,
