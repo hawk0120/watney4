@@ -17,6 +17,7 @@ import utils.LLMResult
 import utils.LogLevel
 import utils.Logger
 import utils.LTMemoryManager
+import utils.AppConfig
 import utils.MemoryStore
 import utils.ResearchSession
 import tools.ToolCall
@@ -24,7 +25,7 @@ import tools.ToolRegistry
 
 class Agent(
     private val inbox: ReceiveChannel<IncomingMessage>,
-    private val llm: LLMProvider,
+    private var llm: LLMProvider,
     private val tools: ToolRegistry? = null,
     private val ctx: Context = Context(),
     private val persona: Watney4 = Watney4(),
@@ -32,6 +33,7 @@ class Agent(
     private val memory: MemoryStore? = null,
     private val ltmManager: LTMemoryManager? = null,
     private val researchSession: ResearchSession? = null,
+    private val config: AppConfig? = null,
     private val scope: CoroutineScope,
     private val consolidationTimezone: String = "Europe/Berlin",
     private val consolidationHour: Int = 3
@@ -98,10 +100,47 @@ class Agent(
                 }
                 if (researchSession != null) {
                     log.info("Starting research from ${msg.replyTo.label}: $topic")
-                    scope.launch { researchSession.run(topic) }
+                    scope.launch { researchSession.run(topic, llm) }
                 } else {
                     msg.replyTo.sendMessage("Research system is not configured.")
                 }
+                continue
+            }
+
+            if (trimmed.startsWith("/model", ignoreCase = true)) {
+                val rest = trimmed.removePrefix("/model").trim()
+                val provider: String
+                val model: String?
+                val colonIdx = rest.indexOf(':')
+                if (colonIdx > 0) {
+                    provider = rest.substring(0, colonIdx).lowercase()
+                    model = rest.substring(colonIdx + 1).trim().ifEmpty { null }
+                } else {
+                    provider = rest.lowercase()
+                    model = null
+                }
+                if (provider !in listOf("mistral", "openrouter", "llama", "llamacpp")) {
+                    msg.replyTo.sendMessage("Unknown provider '$provider'. Use mistral, openrouter, or llama.")
+                    continue
+                }
+                if (config == null) {
+                    msg.replyTo.sendMessage("Cannot switch models — config not available.")
+                    continue
+                }
+                val normalizedProvider = if (provider == "llamacpp") "llamacpp" else provider
+                llm = try {
+                    val cfg = when (normalizedProvider) {
+                        "llamacpp" -> config.copy(provider = "llamacpp", llamaModel = model ?: config.llamaModel)
+                        else -> config.copy(provider = normalizedProvider, mistralModel = if (normalizedProvider == "mistral" && model != null) model else config.mistralModel, openrouterModel = if (normalizedProvider == "openrouter" && model != null) model else config.openrouterModel)
+                    }
+                    AppConfig.createProvider(cfg)
+                } catch (e: Exception) {
+                    msg.replyTo.sendMessage("Failed to switch model: ${e.message}")
+                    continue
+                }
+                val modelLabel = model ?: "default"
+                msg.replyTo.sendMessage("**Model switched:** $normalizedProvider ($modelLabel)")
+                log.info("Model switched to $normalizedProvider ($modelLabel)")
                 continue
             }
 

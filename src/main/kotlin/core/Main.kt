@@ -88,7 +88,6 @@ fun main() = runBlocking {
     ))
 
     val researchSession = ResearchSession(
-        llm = AppConfig.createProvider(config),
         tools = tools,
         discord = discord,
         logLevel = config.logLevel
@@ -103,6 +102,7 @@ fun main() = runBlocking {
         memory = memory,
         ltmManager = ltmManager,
         researchSession = researchSession,
+        config = config,
         scope = this,
         consolidationTimezone = config.consolidationTimezone,
         consolidationHour = config.consolidationHour

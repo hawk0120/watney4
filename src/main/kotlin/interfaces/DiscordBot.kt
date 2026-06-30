@@ -61,7 +61,10 @@ class DiscordBot(
                             Commands.slash("join", "Join your current voice channel"),
                             Commands.slash("leave", "Leave the voice channel"),
                             Commands.slash("research", "Run autonomous research on a topic")
-                                .addOption(OptionType.STRING, "topic", "The topic to research", true)
+                                .addOption(OptionType.STRING, "topic", "The topic to research", true),
+                            Commands.slash("model", "Switch LLM provider or model")
+                                .addOption(OptionType.STRING, "provider", "Provider: mistral, openrouter, or llama", true)
+                                .addOption(OptionType.STRING, "model", "Optional model name (e.g. mistral:ministral-8b-2512)", false)
                         ).queue(
                             { log.info("Slash commands registered (${it.size} commands)") },
                             { log.error("Failed to register slash commands: ${it.message}") }
@@ -164,6 +167,14 @@ class DiscordBot(
                                 log.info("Slash command /research from ${event.user.name}: $topic")
                                 event.reply("**Starting research:** $topic").setEphemeral(false).queue()
                                 sink.trySend(IncomingMessage("/research $topic", this@DiscordBot))
+                            }
+                            "model" -> {
+                                val provider = event.getOption("provider")?.asString ?: ""
+                                val modelOpt = event.getOption("model")?.asString
+                                val text = if (modelOpt != null) "/model $provider:$modelOpt" else "/model $provider"
+                                log.info("Slash command /model from ${event.user.name}: $text")
+                                event.reply("**Switching model to:** $provider").setEphemeral(false).queue()
+                                sink.trySend(IncomingMessage(text, this@DiscordBot))
                             }
                         }
                     }

@@ -7,7 +7,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class ResearchSession(
-    private val llm: LLMProvider,
     private val tools: ToolRegistry,
     private val discord: ChatInterface? = null,
     private val logLevel: LogLevel = LogLevel.INFO
@@ -16,7 +15,7 @@ class ResearchSession(
     private val maxIterations = 20
     private val vaultPath = "/home/hawk0120/Documents/obsidian/07 Lab/Research"
 
-    suspend fun run(topic: String) {
+    suspend fun run(topic: String, llm: LLMProvider) {
         val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm"))
         val slug = topic.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-').take(40)
         val filename = "$slug-$timestamp.md"
