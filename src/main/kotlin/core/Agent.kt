@@ -44,7 +44,7 @@ class Agent(
         ctx.bind(messages)
         installShutdownHook()
         memory?.init()
-        messages.add(ChatMessage("system", persona.whoAmI()))
+        messages.add(ChatMessage("system", persona.whoAmI() + "\n\n" + persona.whoIsBrady()))
         val toolDefs = tools?.definitions()
         if (toolDefs != null && toolDefs.isNotEmpty()) {
             log.info("Agent loop started — ${toolDefs.size} tool(s) registered")
