@@ -59,6 +59,20 @@ Add instrumentation to compare conditions:
 
 Each feature becomes an independent variable for a user study.
 
+### In progress: Three-tier memory system
+
+Built Q2 2026. The memory system is the research platform for Experiment #2 (Memory Visibility).
+
+Architecture:
+- **Working memory** — context window, agent self-manages via `context_truncate`/`inject`
+- **Long-term memory** — weekly LTM in SQLite with 5 perspective summaries (factual, preferences, projects, goals, personal)
+- **Archive** — semantic search via embeddings (SQLite BLOB + cosine similarity)
+
+The independent variable for the Memory Visibility experiment: what the agent shows the user from its memory system. Toggle levels:
+- **Hidden** — agent uses `semantic_search` internally, user never sees memory
+- **Tagged** — agent shows results with "[from memory]" attribution
+- **Full** — agent shows raw archive entries with similarity scores
+
 ---
 
 ## Stage 4: Learn study design
@@ -112,7 +126,8 @@ Each feature becomes an independent variable for a user study.
 | Task | Tools |
 |------|-------|
 | Reading papers | `web_search` → find papers, `web_fetch` → get abstracts, `write` → save notes |
-| Literature review | `cron` for daily arxiv digests, `save_memory` for cross-session knowledge |
+| Literature review | `cron` for daily arxiv digests, `semantic_search` for cross-session knowledge retrieval |
+| Memory experiments | `semantic_search` retrieves past sessions, `context_inject` places results, `interaction_log` records which condition was active |
 | Running experiments | `bash` to launch scripts, `opencode` to write analysis code |
 | Note-taking | `write` → Obsidian vault, `context_inject` for working summaries |
 | Experiment monitoring | `cron` for periodic status checks, `remind` for one-shot notifications |
